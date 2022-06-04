@@ -3,4 +3,4 @@ project(cli)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(cli src/main.cpp src/Cli/Cli.cpp src/Cli/Cli.h src/Flag/Flag.cpp src/Flag/Flag.h)
+add_executable(cli src/main.cpp src/Cli/Cli.cpp src/Cli/Cli.hpp src/Flag/Flag.cpp src/Flag/Flag.hpp src/Command/Command.cpp src/Command/Command.hpp)
