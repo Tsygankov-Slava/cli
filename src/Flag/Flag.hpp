@@ -10,7 +10,6 @@ public:
     bool isRequired;
     bool withValue;
     std::string value;
-    bool isPassed = true;
 
 public:
     Flag(std::string name, std::string shortName, std::string description, bool isRequired, bool withValue)

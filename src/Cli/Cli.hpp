@@ -9,8 +9,10 @@ public:
     Cli &command(std::string name, std::string description, std::string example, FlagsVec flagsVec, std::function<void(std::vector<std::pair<std::string, std::string>>)> action);
 
     void parse(int argc, char **argv);
-    void printHelp(std::map<std::string, Command> &commands);
-
+    static void printHelp(std::map<std::string, Command> &commands);
+    static std::string checkIsRequired(int argc, char **argv, FlagsVec &flags);
+    static std::string checkWrongFlag(int argc, char **argv, FlagsVec &flags, int start, std::string &cmd);
+    static std::string flagInCommand(Command &cmd, std::string &flag);
 
 private:
     std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},

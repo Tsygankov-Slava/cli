@@ -9,6 +9,52 @@ Cli &Cli::command(std::string name, std::string description, std::string example
     return *this;
 }
 
+std::string Cli::checkIsRequired(int argc, char **argv, FlagsVec &flags) {
+    for (auto &flag : flags.flags) {
+        if (flag.isRequired) {
+            bool isPassed = false;
+            for (int i = 1; i < argc; i++) {
+                if (argv[i] == "--" + flag.name || argv[i] == '-' + flag.shortName) {
+                    isPassed = true;
+                }
+            }
+            if (!isPassed) {
+                return "\033[31mERROR: Не введён обязательный флаг -> --" + flag.name + " OR -" + flag.shortName;
+            }
+        }
+    }
+    return "";
+}
+
+std::string Cli::checkWrongFlag(int argc, char **argv, FlagsVec &flags, int start, std::string &cmd) {
+    for (int i = start; i < argc; ++i) {
+        bool isWrong = true;
+        std::string inputFlag = argv[i];
+        if (inputFlag[0] != '-') {
+            break;
+        }
+        for (auto &flag : flags.flags) {
+            if (inputFlag == "--" + flag.name || inputFlag == '-' + flag.shortName) {
+                isWrong = false;
+                break;
+            }
+        }
+        if (isWrong) {
+            return "\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + inputFlag;
+        }
+    }
+    return "";
+}
+
+std::string Cli::flagInCommand(Command &cmd, std::string &flag) {
+    for (auto &f : cmd.flagsVec.flags) {
+        if ("--" + f.name == flag || '-' + f.shortName == flag) {
+            return f.name;
+        }
+    }
+    return "";
+}
+
 void Cli::parse(int argc, char **argv) {
     std::string cmd;
     for (int i = 1; i < argc+1; ++i) {
@@ -17,7 +63,9 @@ void Cli::parse(int argc, char **argv) {
             if (commands.contains(cmd)) {
                 isCmdOrFlag = true;
                 auto func = commands.at(cmd).action;
-                func(parsedFlags);
+                if (func) {
+                    func(parsedFlags);
+                }
             }
             break;
         }
@@ -26,16 +74,31 @@ void Cli::parse(int argc, char **argv) {
             isCmdOrFlag = true;
             if (!cmd.empty()) {
                 auto func = commands.at(cmd).action;
-                func(parsedFlags);
+                if (func) {
+                    func(parsedFlags);
+                }
             }
             cmd = str;
-            continue;
         }
         if (commands.contains(cmd)) {
-            if (commands.at(cmd).flags.contains(str)) {
+            auto message = checkIsRequired(argc, argv, commands.at(cmd).flagsVec);
+            if (!message.empty()) {
+                throw std::invalid_argument(message);
+            }
+            message = checkWrongFlag(argc, argv, commands.at(cmd).flagsVec, i, cmd);
+            if (!message.empty()) {
+                throw std::invalid_argument(message);
+            }
+            auto command = commands.at(cmd);
+            auto s = flagInCommand(command, str);
+            if (!s.empty()) {
                 isCmdOrFlag = true;
                 std::string value;
-                auto flag = commands.at(cmd).flags.at(str);
+                int pos = 1;
+                if (str[1] == '-') {
+                    pos++;
+                }
+                auto flag = command.flags.at(s);
                 if (flag.withValue) {
                     value = argv[++i];
                 }
