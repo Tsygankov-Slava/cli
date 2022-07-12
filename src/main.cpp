@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
                                                                               "\tИстория вычислений: \n"
                                                                               "\t\t2 + 2 * 2 = 6\n"
                                                                               "\t\t5 + 6 = 11",
-                         {{Flag("flag", "f", "it's description for flag", true, false)}}, nullptr)
+                         {{Flag("flag", "f", "it's description for flag", false, false)}}, nullptr)
                 .parse(argc, argv);
     } catch (const std::invalid_argument& error) {
         std::cout << error.what();
