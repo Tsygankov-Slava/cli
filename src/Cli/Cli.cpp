@@ -1,6 +1,6 @@
 #include "Cli.hpp"
 
-Cli &Cli::command(std::string name, std::string description, std::string example, std::vector<Flag> flags, std::function<void(std::vector<std::pair<std::string, std::string>>)> action) {
+Cli &Cli::command(std::string name, std::string description, std::string example, std::vector<Flag> flags, function action) {
     Command cmd = Command(name, description, example, flags, action);
     commands.insert(std::make_pair(name, cmd));
     return *this;
@@ -32,22 +32,27 @@ void Cli::parse(int argc, char **argv) {
     for (int i = 1; i < argc; ++i) {
         cmd = argv[i];
         if (commands.contains(cmd)) {
-            if (!commands.at(cmd).commandFlags.empty()) {
+            auto commandFlags = commands.at(cmd).commandFlags;
+            std::vector<std::string> flags;
+            if (!commandFlags.empty()) {
                 std::string flag;
-                std::vector<std::string> flags;
-                while (i+1 < argc && !(flag = argv[i+1]).empty() && flag[0] == '-') {
+                while (i + 1 < argc && !(flag = argv[i + 1]).empty() && flag[0] == '-') {
                     std::string flagName = flag;
-                    flagName.erase(std::remove(flagName.begin(), flagName.begin()+2, '-'), flagName.begin()+2);
-                    if (!flagInCommand(commands.at(cmd).commandFlags, flagName)) {
+                    flagName.erase(std::remove(flagName.begin(), flagName.begin() + 2, '-'), flagName.begin() + 2);
+                    if (!flagInCommand(commandFlags, flagName)) {
                         throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + flag);
                     }
                     flags.emplace_back(flagName);
                     i++;
                 }
-                message = checkIsRequiredFlag(flags, commands.at(cmd).commandFlags);
+                message = checkIsRequiredFlag(flags, commandFlags);
                 if (!message.empty()) {
                     throw std::invalid_argument(message);
                 }
+            }
+            auto action = commands.at(cmd).action;
+            if (action) {
+                action(flags);
             }
         } else {
             if (cmd[0] == '-') {
@@ -74,7 +79,8 @@ void Cli::printHelp(std::map<std::string, Command> &commands) {
             std::cout << " \033[0m: " << flag.second.description << "\n";
         }
         if (!cmd.second.example.empty()) {
-            std::cout << "\033[34mEXAMPLE:\033[0m\n"<< cmd.second.example << "\n";
+            std::cout << "\033[34mEXAMPLE:\033[0m\n"
+                      << cmd.second.example << "\n";
         }
         std::cout << "\n";
     }
