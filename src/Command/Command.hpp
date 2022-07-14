@@ -7,7 +7,7 @@
 
 #include "../Flag/Flag.hpp"
 
-typedef std::vector<std::string> flagsType;
+typedef std::map<std::string, Flag> flagsType;
 typedef std::function<void(flagsType &)> function;
 
 class Command {
