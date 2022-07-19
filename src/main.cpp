@@ -1,6 +1,7 @@
 #include <iostream>
 
-#include "Cli/Cli.hpp"
+//#include "Cli/Cli.hpp"
+#include "../build/cli.hpp"
 
 void func(flagsType &parsedFlags) {
     std::cout << "Hi!\n";
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
                                                                             "\tИстория вычислений: \n"
                                                                             "\t\t2 + 2 * 2 = 6\n"
                                                                             "\t\t5 + 6 = 11",
-                         {{Flag("flag", "f", "it's description for flag", true, true)}}, func)
+                         {{Flag("flag", "f", "it's description for flag", false, true)}}, func)
                 .parse(argc, argv);
     } catch (const std::invalid_argument &error) {
         std::cout << error.what();
