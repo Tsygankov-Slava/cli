@@ -1,6 +1,11 @@
 #pragma once
 
 #include <string>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <vector>
+
 
 class Flag {
 public:
@@ -15,12 +20,12 @@ public:
     Flag(std::string name, std::string shortName, std::string description, bool isRequired, bool withValue)
         : name(std::move(name)), shortName(std::move(shortName)), description(std::move(description)), isRequired(isRequired), withValue(withValue){};
 };
-#include <functional>
-#include <iostream>
-#include <map>
-#include <vector>
+
+
+
 typedef std::map<std::string, Flag> flagsType;
 typedef std::function<void(flagsType &)> function;
+
 class Command {
 public:
     std::string name;
@@ -28,6 +33,7 @@ public:
     std::string example;
     std::map<std::string, Flag> commandFlags;
     function action;
+
 public:
     Command(std::string name, std::string description, std::string example, std::vector<Flag> commandFlags, function action)
         : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)) {
@@ -36,13 +42,17 @@ public:
         }
     };
 };
+
+
 class Cli {
 public:
     Cli &command(std::string name, std::string description, std::string example, std::vector<Flag> commandFlag, function action);
+
     void parse(int argc, char **argv);
     static void printHelp(std::map<std::string, Command> &commands);
     static std::string checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags);
     static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &flag);
+
 private:
     std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},
                                                                               [this](flagsType &parsedFlags) { printHelp(this->commands); }))};
