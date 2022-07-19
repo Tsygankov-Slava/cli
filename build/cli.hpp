@@ -104,7 +104,6 @@ void Cli::parse(int argc, char **argv) {
                     if (commandFlag.withValue) {
                         ++i;
                         commandFlag.value = argv[i];
-                        ++i;
                     }
                     flags.insert({flagName, commandFlag});
                 }
