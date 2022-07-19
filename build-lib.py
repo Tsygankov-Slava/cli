@@ -27,8 +27,7 @@ except FileExistsError:
 paths = ["src/Flag/Flag.hpp", "src/Flag/Flag.cpp", "src/Command/Command.hpp", "src/Cli/Cli.hpp", 
 "src/Cli/Cli.cpp", "src/Command/Command.cpp"] # !Порядок файлов важен (запись в code идёт именно в этом порядке)
 code = ""
-includes = "#pragma once\n\n" # Собираем сюда все подключаемые библиотеки, чтобы потом в файле поместить их 
-сверху
+includes = "#pragma once\n\n" # Собираем сюда все подключаемые библиотеки, чтобы потом в файле поместить их сверху
 for path in paths:
     file = open(path, "r")
     for str_ in file:
