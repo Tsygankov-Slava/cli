@@ -1,6 +1,6 @@
 #include "Cli.hpp"
 
-Cli &Cli::command(std::string name, std::string description, std::string example, std::vector<Flag> flags, function action) {
+Cli &Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &flags, const CommandCallback &action) {
     Command cmd = Command(name, description, example, flags, action);
     commands.insert(std::make_pair(name, cmd));
     return *this;
