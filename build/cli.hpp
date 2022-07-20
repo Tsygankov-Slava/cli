@@ -46,7 +46,7 @@ public:
 
 class Cli {
 public:
-    Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
+    Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &flags, const CommandCallback &action);
 
     void parse(int argc, char **argv);
     static void printHelp(std::map<std::string, Command> &commands);
