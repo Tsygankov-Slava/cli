@@ -4,7 +4,7 @@
 
 class Cli {
 public:
-    Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
+    Cli &command(std::string name, std::string description, std::string example, std::vector<Flag> commandFlag, function action);
 
     void parse(int argc, char **argv);
     static void printHelp(std::map<std::string, Command> &commands);
@@ -13,5 +13,5 @@ public:
 
 private:
     std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},
-                                                                              [this](FlagsType &parsedFlags) { printHelp(this->commands); }))};
+                                                                              [this](flagsType &parsedFlags) { printHelp(this->commands); }))};
 };
