@@ -23,8 +23,8 @@ public:
 
 
 
-typedef std::map<std::string, Flag> flagsType;
-typedef std::function<void(flagsType &)> function;
+using FlagsType = std::map<std::string, Flag>;
+using CommandCallback = std::function<void(FlagsType &)>;
 
 class Command {
 public:
@@ -32,10 +32,10 @@ public:
     std::string description;
     std::string example;
     std::map<std::string, Flag> commandFlags;
-    function action;
+    CommandCallback action;
 
 public:
-    Command(std::string name, std::string description, std::string example, std::vector<Flag> commandFlags, function action)
+    Command(std::string name, std::string description, std::string example, const std::vector<Flag> &commandFlags, CommandCallback action)
         : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)) {
         for (auto &flag : commandFlags) {
             this->commandFlags.insert(std::make_pair(flag.name, flag));
@@ -46,7 +46,7 @@ public:
 
 class Cli {
 public:
-    Cli &command(std::string name, std::string description, std::string example, std::vector<Flag> commandFlag, function action);
+    Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
     void parse(int argc, char **argv);
     static void printHelp(std::map<std::string, Command> &commands);
@@ -55,10 +55,10 @@ public:
 
 private:
     std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},
-                                                                              [this](flagsType &parsedFlags) { printHelp(this->commands); }))};
+                                                                              [this](FlagsType &parsedFlags) { printHelp(this->commands); }))};
 };
 
-Cli &Cli::command(std::string name, std::string description, std::string example, std::vector<Flag> flags, function action) {
+Cli &Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &flags, const CommandCallback &action) {
     Command cmd = Command(name, description, example, flags, action);
     commands.insert(std::make_pair(name, cmd));
     return *this;
