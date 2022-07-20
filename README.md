@@ -233,10 +233,5 @@ $ ./cli printName
 ERROR: Не введён обязательный флаг -> --name OR -n
 ```
 
-```
-$ ./cli printName -n
-zsh: segmentation fault  ./cli printName -n
-```
-
 [🔝Оглавление](#оглавление)
 
