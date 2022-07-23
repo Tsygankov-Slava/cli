@@ -51,7 +51,7 @@ public:
     void parse(int argc, char **argv);
     static void printHelp(std::map<std::string, Command> &commands);
     static std::string checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags);
-    static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &flag);
+    static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName);
 
 private:
     std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},
@@ -65,9 +65,10 @@ Cli &Cli::command(const std::string &name, const std::string &description, const
 }
 
 std::string Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags) {
-    for (auto &[name, flag] : commandFlags) {
+    for (auto &commandFlag : commandFlags) {
+        auto flag = commandFlag.second;
         if (flag.isRequired) {
-            if (!(inputFlags.contains(flag.name) || inputFlags.contains(flag.shortName))) {
+            if (!(inputFlags.count(flag.name) || inputFlags.count(flag.shortName))) {
                 return "\033[31mERROR: Не введён обязательный флаг -> --" + flag.name + " OR -" + flag.shortName;
             }
         }
@@ -75,10 +76,11 @@ std::string Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, st
     return "";
 }
 
-std::string Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &flag) {
-    for (auto &[name, f] : commandFlags) {
-        if (f.name == flag || f.shortName == flag) {
-            return f.name;
+std::string Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName) {
+    for (auto &commandFlag : commandFlags) {
+        auto flag = commandFlag.second;
+        if (flag.name == inputFlagName || flag.shortName == inputFlagName) {
+            return flag.name;
         }
     }
     return "";
@@ -89,23 +91,23 @@ void Cli::parse(int argc, char **argv) {
     std::string message;
     for (int i = 1; i < argc; ++i) {
         cmd = argv[i];
-        if (commands.contains(cmd)) {
+        if (commands.count(cmd)) {
             auto commandFlags = commands.at(cmd).commandFlags;
             std::map<std::string, Flag> flags;
             if (!commandFlags.empty()) {
                 std::string flag;
                 while (i + 1 < argc && !(flag = argv[i + 1]).empty() && flag[0] == '-' && ++i) {
-                    std::string flagName = flag;
-                    flagName.erase(std::remove(flagName.begin(), flagName.begin() + 2, '-'), flagName.begin() + 2);
-                    if ((flagName = flagInCommand(commandFlags, flagName)).empty()) {
+                    std::string inputFlagName = flag;
+                    inputFlagName.erase(std::remove(inputFlagName.begin(), inputFlagName.begin() + 2, '-'), inputFlagName.begin() + 2);
+                    if ((inputFlagName = flagInCommand(commandFlags, inputFlagName)).empty()) {
                         throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + flag);
                     }
-                    auto commandFlag = commandFlags.at(flagName);
+                    auto commandFlag = commandFlags.at(inputFlagName);
                     if (commandFlag.withValue) {
                         ++i;
                         commandFlag.value = argv[i];
                     }
-                    flags.insert({flagName, commandFlag});
+                    flags.insert({inputFlagName, commandFlag});
                 }
                 message = checkIsRequiredFlag(flags, commandFlags);
                 if (!message.empty()) {
