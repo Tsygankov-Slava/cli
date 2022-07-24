@@ -1,12 +1,12 @@
 #include "Cli.hpp"
 
-Cli &Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &flags, const CommandCallback &action) {
-    Command cmd = Command(name, description, example, flags, action);
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action) {
+    Command cmd = Command(name, description, example, commandFlag, action);
     commands.insert(std::make_pair(name, cmd));
     return *this;
 }
 
-std::string Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags) {
+std::string cli::Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags) {
     for (auto &commandFlag : commandFlags) {
         auto flag = commandFlag.second;
         if (flag.isRequired) {
@@ -18,7 +18,7 @@ std::string Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, st
     return "";
 }
 
-std::string Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName) {
+std::string cli::Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName) {
     for (auto &commandFlag : commandFlags) {
         auto flag = commandFlag.second;
         if (flag.name == inputFlagName || flag.shortName == inputFlagName) {
@@ -28,12 +28,24 @@ std::string Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, std::s
     return "";
 }
 
-void Cli::parse(int argc, char **argv) {
+void cli::Cli::parse(int argc, char **argv) {
     std::string cmd;
     std::string message;
     for (int i = 1; i < argc; ++i) {
         cmd = argv[i];
         if (commands.count(cmd)) {
+            if (cmd == "help" && argc > 2) {
+                std::vector<std::string> enteredCommands;
+                for (int j = i + 1; j < argc; ++j) {
+                    cmd = argv[j];
+                    if (!commands.count(cmd)) {
+                        throw std::invalid_argument("\033[31mERROR: Команды " + cmd + " не существует\n");
+                    }
+                    enteredCommands.push_back(cmd);
+                }
+                printCmdHelp(enteredCommands, commands);
+                break;
+            }
             auto commandFlags = commands.at(cmd).commandFlags;
             std::map<std::string, Flag> flags;
             if (!commandFlags.empty()) {
@@ -70,30 +82,100 @@ void Cli::parse(int argc, char **argv) {
     }
 }
 
-void Cli::printHelp(std::map<std::string, Command> &commands) {
-    std::cout << "\033[1;37m\033[1mPossible commands:\n";
+void cli::Cli::printAllHelp(std::map<std::string, Command> &commands) {
+    std::cout << "\33[33mUsage:\n"
+                 "\33[0m   command [flags] [arguments]\n\n"
+                 "\33[33mCommands:\n";
+    std::vector<int> sizes = getCmdSizes(commands);
+    const int maxSize = *std::max_element(sizes.begin(), sizes.end());
+    int i = 0;
     for (auto &cmd : commands) {
-        std::cout << "\033[33m" << cmd.first << " \033[0m: " << cmd.second.description << "\n";
+        std::string str = "  " + cmd.first;
+        std::cout << "\033[32m" << std::left << std::setw(maxSize + 2) << str;
+        std::cout << "\033[m" << cmd.second.description << "\n";
+        ++i;
         if (!cmd.second.commandFlags.empty()) {
-            std::cout << "\033[34mPossible flags:\n";
+            std::cout << "\033[33m    Flags:\n";
         }
         for (auto &flag : cmd.second.commandFlags) {
-            std::cout << "\t\033[32m--" << flag.first;
-            if (!flag.second.shortName.empty()) {
-                std::cout << " \033[0mOR \033[32m-" << flag.second.shortName;
+            str = "      -" + flag.second.shortName + ", --" + flag.first;
+            if (flag.second.withValue) {
+                str += "=VALUE";
             }
             if (flag.second.isRequired) {
-                std::cout << "\033[35m {!Обязательный флаг!} ";
+                str += "[\033[31mREQUIRED\033[32m]";
             }
+            std::cout << "\033[32m" << str;
+            std::cout << "\033[m" << std::right << std::setw(maxSize - sizes[i] + 2) << "";
+            std::cout << flag.second.description << "\n";
+            ++i;
+        }
+    }
+    std::cout << "\n";
+}
+std::vector<int> cli::Cli::getCmdSizes(std::map<std::string, Command> &commands) {
+    std::vector<int> actualSize;
+    for (auto &cmd : commands) {
+        actualSize.push_back((int) cmd.first.size() + 2);
+        for (auto &flag : cmd.second.commandFlags) {
+            int flagSize = (int) (flag.first.size() + flag.second.shortName.size() + 11);// 19 - number of special characters (spaces, commas, hyphens)
             if (flag.second.withValue) {
-                std::cout << "\033[35m {!Должен принимать значение!} ";
+                flagSize += 6;// "=VALUE" == 6
             }
-            std::cout << " \033[0m: " << flag.second.description << "\n";
+            if (flag.second.isRequired) {
+                flagSize += 10;// "\033[31mREQUIRED\033[32m" == 24
+            }
+            actualSize.push_back(flagSize);
         }
-        if (!cmd.second.example.empty()) {
-            std::cout << "\033[34mEXAMPLE:\033[0m\n"
-                      << cmd.second.example << "\n";
+    }
+    return actualSize;
+}
+void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std::string, Command> &commands) {
+    std::cout << "\33[33mUsage:\n"
+                 "\33[0m   command [flags] [arguments]\n\n";
+    if (commandsName.size() > 1) {
+        std::cout << "\33[33mCommands:\n";
+    } else {
+        std::cout << "\33[33mCommand:\n";
+    }
+    std::map<std::string, Command> commandsMap;
+    for (auto &cmdName : commandsName) {
+        commandsMap.insert({cmdName, commands.at(cmdName)});
+    }
+    std::vector<int> sizes = getCmdSizes(commandsMap);
+    const int maxSize = *std::max_element(sizes.begin(), sizes.end());
+    int i = 0;
+    for (auto &cmdName : commandsName) {
+        auto cmd = commands.at(cmdName);
+        std::string str = "  " + cmd.name;
+        std::cout << "\033[32m" << std::left << std::setw(maxSize + 2) << str;
+        std::cout << "\033[m" << cmd.description << "\n";
+        ++i;
+        if (!cmd.commandFlags.empty()) {
+            std::cout << "\033[33m    Flags:\n";
         }
-        std::cout << "\n";
+        for (auto &flag : cmd.commandFlags) {
+            str = "      -" + flag.second.shortName + ", --" + flag.first;
+            if (flag.second.withValue) {
+                str += "=VALUE";
+            }
+            if (flag.second.isRequired) {
+                str += "[\033[31mREQUIRED\033[32m]";
+            }
+            std::cout << "\033[32m" << str;
+            std::cout << std::setw(maxSize - sizes[i] + 2) << "";
+            std::cout << "\033[m" << flag.second.description << "\n";
+            ++i;
+        }
+        if (!cmd.example.empty()) {
+            std::cout << "\033[33m    Example:\033[0m\n      ";
+            for (auto &symbol : cmd.example) {
+                std::cout << symbol;
+                if (symbol == '\n') {
+                    std::cout << "      ";
+                }
+            }
+            std::cout << "\n";
+        }
     }
 }

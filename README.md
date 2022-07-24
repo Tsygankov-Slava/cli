@@ -100,7 +100,7 @@ $ make clean
 1. Для того чтобы начать использовать наш CLI сначала надо создать объект `Cli`:
 
 ```c++
-auto cli = Cli();
+auto cli = cli::Cli();
 ```
 
 2. Чтобы описать `команду` нужно использовать следующий синтаксис: 
@@ -144,7 +144,17 @@ Flag(name, shortName, description, isRequired, withValue)
 
 4. В конце нужно обязательно вызвать функцию `parse` с аргументами `argc` и `argv`.
 
-> В данной версии CLI присутствует само-документирование. Существует по умолчанию команда `help`, которая собирает информацию о командах и флагах и выводит её.
+> В данной версии CLI присутствует само-документирование. Существует по умолчанию команда `help`, которая собирает информацию о командах и флагах и выводит её. \
+> Также можно посмотреть информации по отдельной команде или определенному множеству команд.
+> ``` 
+> $ help 
+> ```
+> ``` 
+> $ help command
+> ```
+> ``` 
+> $ help command1 command2
+> ```
 
 ❗ Для полного понимая того, как использовать CLI в своём коде, см. раздел ["Пример использования"](#пример-использования)
 
@@ -159,17 +169,17 @@ Flag(name, shortName, description, isRequired, withValue)
 ```c++
 #include "../build/cli.hpp" // Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
-void func(FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
-void func2(FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printName
+void func(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
+void func2(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printName
 
 int main(int argc, char **argv) {
-    auto cli = Cli();
+    auto cli = cli::Cli();
     try {
         cli.command("printHello", "Выводит на экран слово \"Hello!\"", "$ printHello \n >>> Hello!", {}, func) // Добавляем команду printHello
-                .command("printName", "Выведет на экран \"Hello введённое_имя!\"", "$ printName -n Name\n >>> Hello Name!",
+                .command("printName", "Выведет на экран \"Hello введённое_имя!\"", "$ printName -n Name\n>>> Hello Name!",
                          {
-                                 Flag("name", "n", "Флаг, который принимает имя на вход", true, true),
-                                 Flag("surname", "s", "Флаг, который принимает фамилию на вход", true, true)
+                                 cli::Flag("name", "n", "Флаг, который принимает имя на вход", true, true),
+                                 cli::Flag("surname", "s", "Флаг, который принимает фамилию на вход", true, true)
                          }, func2) // Добавляем команду printName и указываем флаги name и surname
                 .parse(argc, argv); // Обязательно вызываем функцию parse c аргументами argc и argv
     } catch (const std::invalid_argument &error) { // Обрабатываем какие-либо ошибки
@@ -179,11 +189,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void func(FlagsType &parsedFlags) { // Определение функции команды printHello
+void func(cli::FlagsType &parsedFlags) { // Определение функции команды printHello
     std::cout << "Hello!\n";
 }
 
-void func2(FlagsType &parsedFlags) { // Определение функции команды printName
+void func2(cli::FlagsType &parsedFlags) { // Определение функции команды printName
     std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
 }
 ```
@@ -202,21 +212,16 @@ Hello Vanya Sidorov!
 
 ```
 $ ./cli help
-Possible commands:
-help : Выведет справочную информацию и подскажет всевозможные команды
+Usage:
+   command [flags] [arguments]
 
-printHello : Выводит на экран слово "Hello!"
-EXAMPLE:
-$ printHello 
- >>> Hello!
-
-printName : Выведет на экран "Hello введённое_имя!"
-Possible flags:
-	--name OR -n {!Обязательный флаг!}  {!Должен принимать значение!}  : Флаг, который принимает имя на вход
-	--surname OR -s {!Обязательный флаг!}  {!Должен принимать значение!}  : Флаг, который принимает фамилию на вход
-EXAMPLE:
-$ printName -n Name
->>> Hello Name!
+Commands:
+  help                               Выведет справочную информацию и подскажет всевозможные команды
+  printHello                         Выводит на экран слово "Hello!"
+  printName                          Выведет на экран "Hello введённое_имя!"
+    Flags:
+      -n, --name=VALUE[REQUIRED]     Флаг, который принимает имя на вход
+      -s, --surname=VALUE[REQUIRED]  Флаг, который принимает фамилию на вход
 ```
 
 ```
