@@ -8,8 +8,10 @@
 #include "../Flag/Flag.hpp"
 
 namespace cli {
+
     using FlagsType = std::map<std::string, Flag>;
     using CommandCallback = std::function<void(FlagsType &)>;
+
     class Command {
     public:
         std::string name;

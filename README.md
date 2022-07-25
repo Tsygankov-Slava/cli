@@ -175,11 +175,11 @@ void func2(cli::FlagsType &parsedFlags); // Объявляем функцию, �
 int main(int argc, char **argv) {
     auto cli = cli::Cli();
     try {
-        cli.command("printHello", "Выводит на экран слово \"Hello!\"", "$ printHello \n >>> Hello!", {}, func) // Добавляем команду printHello
-                .command("printName", "Выведет на экран \"Hello введённое_имя!\"", "$ printName -n Name\n>>> Hello Name!",
+        cli.command("printHello", "Displays the word \"Hello!\"", "$ printHello \n >>> Hello!", {}, func) // Добавляем команду printHello
+                .command("printName", "Displays \"Hello [entered name]!\"", "$ printName -n Name\n>>> Hello Name!",
                          {
-                                 cli::Flag("name", "n", "Флаг, который принимает имя на вход", true, true),
-                                 cli::Flag("surname", "s", "Флаг, который принимает фамилию на вход", true, true)
+                                 cli::Flag("name", "n", "A flag that accepts a name as input", true, true),
+                                 cli::Flag("surname", "s", "A flag that accepts a surname for entry", true, true)
                          }, func2) // Добавляем команду printName и указываем флаги name и surname
                 .parse(argc, argv); // Обязательно вызываем функцию parse c аргументами argc и argv
     } catch (const std::invalid_argument &error) { // Обрабатываем какие-либо ошибки
@@ -196,6 +196,7 @@ void func(cli::FlagsType &parsedFlags) { // Определение функци�
 void func2(cli::FlagsType &parsedFlags) { // Определение функции команды printName
     std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
 }
+
 ```
 
 ### Примеры запуска в терминале:
@@ -218,29 +219,33 @@ Usage:
    command [flags] [arguments]
 
 Commands:
-  help                               Выведет справочную информацию и подскажет всевозможные команды
-  printHello                         Выводит на экран слово "Hello!"
-  printName                          Выведет на экран "Hello введённое_имя!"
+  help                               Displays background information and prompts all kinds of commands
+  printHello                         Displays the word "Hello!"
+  printName                          Displays "Hello [entered name]!"
     Flags:
-      -n, --name=VALUE[REQUIRED]     Флаг, который принимает имя на вход
-      -s, --surname=VALUE[REQUIRED]  Флаг, который принимает фамилию на вход
+      -n, --name=VALUE[REQUIRED]     A flag that accepts a name as input
+      -s, --surname=VALUE[REQUIRED]  A flag that accepts a surname for entry
 ```
 
 ```
 $ ./cli printHello -f
 Hello!
-ERROR: Неизвестный флаг -> -f
+ERROR: Unknown flag-> -f
 ```
 
 ```
 $ ./cli cmd
-ERROR: Неизвестная команда -> cmd
+ERROR: Unknown command -> cmd
 ```
 
 ```
 $ ./cli printName
-ERROR: Не введён обязательный флаг -> --name OR -n
+ERROR: Required flag not entered -> --name OR -n
 ```
 
+```
+./cli printName -n
+ERROR: Flag "--name" must accept an argument
+```
 [🔝Оглавление](#оглавление)
 

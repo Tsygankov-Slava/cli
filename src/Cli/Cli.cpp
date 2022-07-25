@@ -11,7 +11,7 @@ std::string cli::Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlag
         auto flag = commandFlag.second;
         if (flag.isRequired) {
             if (!(inputFlags.count(flag.name) || inputFlags.count(flag.shortName))) {
-                return "\033[31mERROR: Не введён обязательный флаг -> --" + flag.name + " OR -" + flag.shortName;
+                return "\033[31mERROR: Required flag not entered -> --" + flag.name + " OR -" + flag.shortName + "\n";
             }
         }
     }
@@ -39,7 +39,7 @@ void cli::Cli::parse(int argc, char **argv) {
                 for (int j = i + 1; j < argc; ++j) {
                     cmd = argv[j];
                     if (!commands.count(cmd)) {
-                        throw std::invalid_argument("\033[31mERROR: Команды " + cmd + " не существует\n");
+                        throw std::invalid_argument("\033[31mERROR: Command \"" + cmd + "\" doesn't exist\n");
                     }
                     enteredCommands.push_back(cmd);
                 }
@@ -54,11 +54,21 @@ void cli::Cli::parse(int argc, char **argv) {
                     std::string inputFlagName = flag;
                     inputFlagName.erase(std::remove(inputFlagName.begin(), inputFlagName.begin() + 2, '-'), inputFlagName.begin() + 2);
                     if ((inputFlagName = flagInCommand(commandFlags, inputFlagName)).empty()) {
+<<<<<<< HEAD
                         throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + flag);
+=======
+                        throw std::invalid_argument("\033[31mERROR: An unknown flag has been entered for the command \"" + cmd + "\" -> \"" + flag + "\"\n");
+>>>>>>> 59004eb (Updated error comments, english language instead of russian language)
                     }
                     auto commandFlag = commandFlags.at(inputFlagName);
                     if (commandFlag.withValue) {
                         ++i;
+<<<<<<< HEAD
+=======
+                        if (i == argc) {
+                            throw std::invalid_argument("\033[31mERROR: Flag \"--" + inputFlagName + "\" must accept an argument\n");
+                        }
+>>>>>>> 59004eb (Updated error comments, english language instead of russian language)
                         commandFlag.value = argv[i];
                     }
                     flags.insert({inputFlagName, commandFlag});
@@ -74,9 +84,9 @@ void cli::Cli::parse(int argc, char **argv) {
             }
         } else {
             if (cmd[0] == '-') {
-                throw std::invalid_argument("\033[31mERROR: Неизвестный флаг -> " + cmd);
+                throw std::invalid_argument("\033[31mERROR: Unknown flag-> " + cmd + "\n");
             } else {
-                throw std::invalid_argument("\033[31mERROR: Неизвестная команда -> " + cmd);
+                throw std::invalid_argument("\033[31mERROR: Unknown command -> " + cmd + "\n");
             }
         }
     }
@@ -124,7 +134,7 @@ std::vector<int> cli::Cli::getCmdSizes(std::map<std::string, Command> &commands)
                 flagSize += 6;// "=VALUE" == 6
             }
             if (flag.second.isRequired) {
-                flagSize += 10;// "\033[31mREQUIRED\033[32m" == 24
+                flagSize += 10;// "[REQUIRED]" == 10
             }
             actualSize.push_back(flagSize);
         }

@@ -19,7 +19,7 @@ namespace cli {
         static std::vector<int> getCmdSizes(std::map<std::string, Command> &commands);
 
     private:
-        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Выведет справочную информацию и подскажет всевозможные команды", "", {},
+        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Displays background information and prompts all kinds of commands", "", {},
                                                                                   [this](FlagsType &parsedFlags) {
                                                                                       printAllHelp(this->commands);
                                                                                   }))};
