@@ -212,6 +212,8 @@ Hello Vanya Sidorov!
 
 ```
 $ ./cli help
+CLI version 0.1.0
+
 Usage:
    command [flags] [arguments]
 
