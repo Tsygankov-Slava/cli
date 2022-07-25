@@ -54,11 +54,14 @@ void cli::Cli::parse(int argc, char **argv) {
                     std::string inputFlagName = flag;
                     inputFlagName.erase(std::remove(inputFlagName.begin(), inputFlagName.begin() + 2, '-'), inputFlagName.begin() + 2);
                     if ((inputFlagName = flagInCommand(commandFlags, inputFlagName)).empty()) {
-                        throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + flag);
+                        throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> \"" + flag + "\"\n");
                     }
                     auto commandFlag = commandFlags.at(inputFlagName);
                     if (commandFlag.withValue) {
                         ++i;
+                        if (i == argc) {
+                            throw std::invalid_argument("\033[31mERROR: Флаг \"--" + inputFlagName + "\" должен принимать аргумент\n");
+                        }
                         commandFlag.value = argv[i];
                     }
                     flags.insert({inputFlagName, commandFlag});
