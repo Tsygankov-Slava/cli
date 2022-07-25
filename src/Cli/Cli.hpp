@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../Command/Command.hpp"
+#include "../cli_config.h"
 
 namespace cli {
     class Cli {

@@ -83,6 +83,7 @@ void cli::Cli::parse(int argc, char **argv) {
 }
 
 void cli::Cli::printAllHelp(std::map<std::string, Command> &commands) {
+    std::cout << "\033[32mCLI \033[mversion \033[33m" << CLI_VERSION_MAJOR << '.' << CLI_VERSION_MINOR << '.' << CLI_VERSION_PATCH << "\n\n";
     std::cout << "\33[33mUsage:\n"
                  "\33[0m   command [flags] [arguments]\n\n"
                  "\33[33mCommands:\n";

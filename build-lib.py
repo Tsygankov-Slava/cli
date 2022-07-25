@@ -25,18 +25,22 @@ except FileExistsError:
 #Чтение всех файлов из path и объединение всё в переменную code
 #############################################################    
 paths = ["src/Flag/Flag.hpp", "src/Flag/Flag.cpp", "src/Command/Command.hpp", "src/Cli/Cli.hpp", 
-"src/Cli/Cli.cpp", "src/Command/Command.cpp"] # !Порядок файлов важен (запись в code идёт именно в этом порядке)
+"src/Cli/Cli.cpp", "src/Command/Command.cpp", "src/cli_config.h"] # !Порядок файлов важен (запись в code идёт именно в этом порядке)
 code = ""
 includes = "#pragma once\n\n" # Собираем сюда все подключаемые библиотеки, чтобы потом в файле поместить их сверху
+defines = "\n"
 for path in paths:
     file = open(path, "r")
     for str_ in file:
         if ("#" in str_):
             if not("#include \"" in str_ or "#pragma" in str_):
-                includes += str_
+                if ("#define" in str_):
+                    defines += str_
+                else:
+                    includes += str_
         else:    
             code += str_
-code = includes + code   
+code = includes + defines + code
 #############################################################
     
 #Создание файла собранной библиотеки cli.hpp    
