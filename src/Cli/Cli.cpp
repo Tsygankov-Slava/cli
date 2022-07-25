@@ -54,21 +54,14 @@ void cli::Cli::parse(int argc, char **argv) {
                     std::string inputFlagName = flag;
                     inputFlagName.erase(std::remove(inputFlagName.begin(), inputFlagName.begin() + 2, '-'), inputFlagName.begin() + 2);
                     if ((inputFlagName = flagInCommand(commandFlags, inputFlagName)).empty()) {
-<<<<<<< HEAD
-                        throw std::invalid_argument("\033[31mERROR: Введён неизвестный флаг для команды \"" + cmd + "\" -> " + flag);
-=======
                         throw std::invalid_argument("\033[31mERROR: An unknown flag has been entered for the command \"" + cmd + "\" -> \"" + flag + "\"\n");
->>>>>>> 59004eb (Updated error comments, english language instead of russian language)
                     }
                     auto commandFlag = commandFlags.at(inputFlagName);
                     if (commandFlag.withValue) {
                         ++i;
-<<<<<<< HEAD
-=======
                         if (i == argc) {
                             throw std::invalid_argument("\033[31mERROR: Flag \"--" + inputFlagName + "\" must accept an argument\n");
                         }
->>>>>>> 59004eb (Updated error comments, english language instead of russian language)
                         commandFlag.value = argv[i];
                     }
                     flags.insert({inputFlagName, commandFlag});
@@ -129,7 +122,7 @@ std::vector<int> cli::Cli::getCmdSizes(std::map<std::string, Command> &commands)
     for (auto &cmd : commands) {
         actualSize.push_back((int) cmd.first.size() + 2);
         for (auto &flag : cmd.second.commandFlags) {
-            int flagSize = (int) (flag.first.size() + flag.second.shortName.size() + 11);// 19 - number of special characters (spaces, commas, hyphens)
+            int flagSize = (int) (flag.first.size() + flag.second.shortName.size() + 11);// 11 - number of special characters (spaces, commas, hyphens)
             if (flag.second.withValue) {
                 flagSize += 6;// "=VALUE" == 6
             }

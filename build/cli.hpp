@@ -196,7 +196,7 @@ std::vector<int> cli::Cli::getCmdSizes(std::map<std::string, Command> &commands)
     for (auto &cmd : commands) {
         actualSize.push_back((int) cmd.first.size() + 2);
         for (auto &flag : cmd.second.commandFlags) {
-            int flagSize = (int) (flag.first.size() + flag.second.shortName.size() + 11);// 19 - number of special characters (spaces, commas, hyphens)
+            int flagSize = (int) (flag.first.size() + flag.second.shortName.size() + 11);// 11 - number of special characters (spaces, commas, hyphens)
             if (flag.second.withValue) {
                 flagSize += 6;// "=VALUE" == 6
             }
