@@ -1,5 +1,5 @@
-//#include "Cli/Cli.hpp"
-#include "../build/cli.hpp" // Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
+#include "Cli/Cli.hpp"
+//#include "../build/cli.hpp" // Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
 void func(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
 void func2(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printName

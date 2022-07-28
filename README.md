@@ -228,19 +228,24 @@ Commands:
 ```
 
 ```
+$ ./cli -f
+ERROR: Unknown flag -> "-f"
+```
+
+```
 $ ./cli printHello -f
 Hello!
-ERROR: Unknown flag-> -f
+ERROR: An unknown flag has been entered for the command "printName" -> "-f"
 ```
 
 ```
 $ ./cli cmd
-ERROR: Unknown command -> cmd
+ERROR: Unknown command -> "cmd"
 ```
 
 ```
 $ ./cli printName
-ERROR: Required flag not entered -> --name OR -n
+ERROR: Required flag not entered -> "--name" OR "-n"
 ```
 
 ```

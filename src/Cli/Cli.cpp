@@ -11,7 +11,7 @@ std::string cli::Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlag
         auto flag = commandFlag.second;
         if (flag.isRequired) {
             if (!(inputFlags.count(flag.name) || inputFlags.count(flag.shortName))) {
-                return "\033[31mERROR: Required flag not entered -> --" + flag.name + " OR -" + flag.shortName + "\n";
+                return "\033[31mERROR: Required flag not entered -> \"--" + flag.name + "\" OR \"-" + flag.shortName + "\"\n";
             }
         }
     }
@@ -77,9 +77,9 @@ void cli::Cli::parse(int argc, char **argv) {
             }
         } else {
             if (cmd[0] == '-') {
-                throw std::invalid_argument("\033[31mERROR: Unknown flag-> " + cmd + "\n");
+                throw std::invalid_argument("\033[31mERROR: Unknown flag -> \"" + cmd + "\"\n");
             } else {
-                throw std::invalid_argument("\033[31mERROR: Unknown command -> " + cmd + "\n");
+                throw std::invalid_argument("\033[31mERROR: Unknown command -> \"" + cmd + "\"\n");
             }
         }
     }

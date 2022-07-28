@@ -151,7 +151,7 @@ void cli::Cli::parse(int argc, char **argv) {
             }
         } else {
             if (cmd[0] == '-') {
-                throw std::invalid_argument("\033[31mERROR: Unknown flag-> " + cmd + "\n");
+                throw std::invalid_argument("\033[31mERROR: Unknown flag -> " + cmd + "\n");
             } else {
                 throw std::invalid_argument("\033[31mERROR: Unknown command -> " + cmd + "\n");
             }
