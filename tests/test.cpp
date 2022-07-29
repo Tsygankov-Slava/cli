@@ -21,20 +21,49 @@ public:
                           cli::Flag("surname", "s", "A flag that accepts a surname for entry", true, true)},
                          func2);
     }
-
 };
+
+std::vector<const std::string> getStringVector(const std::string &cmdArguments, const char separator = ' ') {
+    std::vector<const std::string> arguments;
+    std::string str;
+    int index = 0;
+    char symbol = cmdArguments[index];
+    while (symbol != '\0') {
+        if (symbol == separator) {
+            arguments.push_back(str);
+            str = "";
+        } else {
+            str += symbol;
+        }
+        index++;
+        symbol = cmdArguments[index];
+    }
+    arguments.push_back(str);
+    return arguments;
+}
+
+char **initArgv(const int argc, const std::string &cmdArguments) {
+    char **argv = new char *[argc];
+    std::vector<const std::string> arguments = getStringVector(cmdArguments);
+    for (int i = 0; i < argc; ++i) {
+        argv[i] = new char[arguments[i].size() + 1];
+        strcpy(argv[i], arguments[i].c_str());
+    }
+    return argv;
+}
+
+void deleteArgv(const int argc, char **argv) {
+    for (int i = 0; i < argc; ++i) {
+        delete[] argv[i];
+    }
+    delete[] argv;
+}
 
 TEST_F(CliFixture, ErrorUnknownCommandFlag) {
     //Average
-    int argc = 3;
-    char **argv = new char *[argc];
-    argv[0] = new char [6];
-    argv[1] = new char [10];
-    argv[2] = new char [3];
-
-    strcpy(argv[0], "./cli");
-    strcpy(argv[1], "printName");
-    strcpy(argv[2], "-k");
+    const int argc = 3;
+    const std::string cmdArguments = "./cli printName -k";
+    char **argv = initArgv(argc, cmdArguments);
 
     //Act
     std::invalid_argument e = std::invalid_argument("");
@@ -45,23 +74,16 @@ TEST_F(CliFixture, ErrorUnknownCommandFlag) {
     }
 
     //Assert
-    EXPECT_STREQ(std::invalid_argument("\x1B[31mERROR: An unknown flag has been entered for the command \"printName\" -> \"-k\"\n").what(), e.what());
+    EXPECT_STREQ("\x1B[31mERROR: An unknown flag has been entered for the command \"printName\" -> \"-k\"\n", e.what());
 
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
+    deleteArgv(argc, argv);
 }
 
 TEST_F(CliFixture, ErrorUnknownCommand) {
     //Average
     int argc = 2;
-    char **argv = new char *[argc];
-    argv[0] = new char [6];
-    argv[1] = new char [4];
-
-    strcpy(argv[0], "./cli");
-    strcpy(argv[1], "cmd");
+    const std::string cmdArguments = "./cli cmd";
+    char **argv = initArgv(argc, cmdArguments);
 
     //Act
     std::invalid_argument e = std::invalid_argument("");
@@ -74,21 +96,14 @@ TEST_F(CliFixture, ErrorUnknownCommand) {
     //Assert
     EXPECT_STREQ(std::invalid_argument("\x1B[31mERROR: Unknown command -> \"cmd\"\n").what(), e.what());
 
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
+    deleteArgv(argc, argv);
 }
 
 TEST_F(CliFixture, ErrorUnknownFlag) {
     //Average
     int argc = 2;
-    char **argv = new char *[argc];
-    argv[0] = new char [6];
-    argv[1] = new char [3];
-
-    strcpy(argv[0], "./cli");
-    strcpy(argv[1], "-f");
+    const std::string cmdArguments = "./cli -f";
+    char **argv = initArgv(argc, cmdArguments);
 
     //Act
     std::invalid_argument e = std::invalid_argument("");
@@ -101,21 +116,14 @@ TEST_F(CliFixture, ErrorUnknownFlag) {
     //Assert
     EXPECT_STREQ(std::invalid_argument("\x1B[31mERROR: Unknown flag -> \"-f\"\n").what(), e.what());
 
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
+    deleteArgv(argc, argv);
 }
 
 TEST_F(CliFixture, RequiredFlagNotEntered) {
     //Average
     int argc = 2;
-    char **argv = new char *[argc];
-    argv[0] = new char [6];
-    argv[1] = new char [10];
-
-    strcpy(argv[0], "./cli");
-    strcpy(argv[1], "printName");
+    const std::string cmdArguments = "./cli printName";
+    char **argv = initArgv(argc, cmdArguments);
 
     //Act
     std::invalid_argument e = std::invalid_argument("");
@@ -128,23 +136,14 @@ TEST_F(CliFixture, RequiredFlagNotEntered) {
     //Assert
     EXPECT_STREQ(std::invalid_argument("\x1B[31mERROR: Required flag not entered -> \"--name\" OR \"-n\"\n").what(), e.what());
 
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
+    deleteArgv(argc, argv);
 }
 
 TEST_F(CliFixture, FlagMustAcceptAnArgument) {
     //Average
     int argc = 3;
-    char **argv = new char *[argc];
-    argv[0] = new char [6];
-    argv[1] = new char [10];
-    argv[2] = new char [3];
-
-    strcpy(argv[0], "./cli");
-    strcpy(argv[1], "printName");
-    strcpy(argv[2], "-n");
+    const std::string cmdArguments = "./cli printName -n";
+    char **argv = initArgv(argc, cmdArguments);
 
     //Act
     std::invalid_argument e = std::invalid_argument("");
@@ -157,10 +156,7 @@ TEST_F(CliFixture, FlagMustAcceptAnArgument) {
     //Assert
     EXPECT_STREQ(std::invalid_argument("\x1B[31mERROR: Flag \"--name\" must accept an argument\n").what(), e.what());
 
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
+    deleteArgv(argc, argv);
 }
 
 int main(int argc, char **argv) {
