@@ -7,7 +7,7 @@ void func2(cli::FlagsType &parsedFlags); // Объявляем функцию, �
 int main(int argc, char **argv) {
     auto cli = cli::Cli();
     try {
-        cli.command("printHello", "Displays the word \"Hello!\"", "$ printHello \n >>> Hello!", {}, func) // Добавляем команду printHello
+        cli.command("printHello", "Displays the word \"Hello!\"", "$ printHello \n>>> Hello!", {}, func) // Добавляем команду printHello
                 .command("printName", "Displays \"Hello [entered name]!\"", "$ printName -n Name\n>>> Hello Name!",
                          {
                                  cli::Flag("name", "n", "A flag that accepts a name as input", true, true),
