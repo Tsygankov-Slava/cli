@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
                          }, func2) // Добавляем команду printName и указываем флаги name и surname
                 .parse(argc, argv); // Обязательно вызываем функцию parse c аргументами argc и argv
     } catch (const std::invalid_argument &error) { // Обрабатываем какие-либо ошибки
-        std::cout << error.what();
+        std::cout << error.what() << "\n";
         return 2; // код завершения программы при ошибке
     }
     return 0;

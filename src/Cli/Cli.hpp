@@ -19,7 +19,7 @@ namespace cli {
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
-        void parse(int argc, char **argv);
+        void parse(int &argc, char **argv);
         static void printAllHelp(std::map<std::string, Command> &commands, cli::Cli &cli);
         static void printCmdHelp(std::vector<std::string> &commandsName, std::map<std::string, Command> &commands, cli::Cli &cli);
         static std::string checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags, cli::Cli &cli);
