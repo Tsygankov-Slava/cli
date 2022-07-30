@@ -140,6 +140,26 @@ TEST_F(CliFixture, RequiredFlagNotEntered) {
     deleteArgv(argc, argv);
 }
 
+TEST_F(CliFixture, CommandDoesNotExist) {
+    //Average
+    int argc = 4;
+    const std::string cmdArguments = "./cli --nocolor help cmd";
+    char **argv = initArgv(argc, cmdArguments);
+
+    //Act
+    std::invalid_argument e = std::invalid_argument("");
+    try {
+        cli.parse(argc, argv);
+    } catch (const std::invalid_argument &error) {
+        e = error;
+    }
+
+    //Assert
+    EXPECT_STREQ(R"(ERROR: Command "cmd" doesn't exist)", e.what());
+
+    deleteArgv(argc, argv);
+}
+
 TEST_F(CliFixture, FlagMustAcceptAnArgument) {
     //Average
     int argc = 4;
