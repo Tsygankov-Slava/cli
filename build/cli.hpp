@@ -68,7 +68,7 @@ namespace cli {
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
-        void parse(int argc, char **argv);
+        void parse(int &argc, char **argv);
         static void printAllHelp(std::map<std::string, Command> &commands, cli::Cli &cli);
         static void printCmdHelp(std::vector<std::string> &commandsName, std::map<std::string, Command> &commands, cli::Cli &cli);
         static std::string checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags, cli::Cli &cli);
@@ -127,7 +127,7 @@ std::pair<int, char **> cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **
     return std::make_pair(argc, argv);
 }
 
-void cli::Cli::parse(int argc, char **argv) {
+void cli::Cli::parse(int &argc, char **argv) {
     std::string cmd;
     std::string message;
     checkNocolor(*this, argc, argv);
@@ -160,7 +160,7 @@ void cli::Cli::parse(int argc, char **argv) {
                     if (commandFlag.withValue) {
                         ++i;
                         if (i == argc) {
-                            throw std::invalid_argument(paint(R"(ERROR: Flag --)" + inputFlagName + R"(" must accept an argument)", "red", *this));
+                            throw std::invalid_argument(paint(R"(ERROR: Flag "--)" + inputFlagName + R"(" must accept an argument)", "red", *this));
                         }
                         commandFlag.value = argv[i];
                     }
@@ -212,7 +212,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
                 str += paint("[", "green", cli) + paint("REQUIRED", "red", cli) + paint("]", "green", cli);
             }
             std::cout << paint(str, "green", cli);
-            std::cout << std::right << std::setw(maxSize - sizes[flag.first] + 2) << "";
+            std::cout << std::setw(maxSize - sizes[flag.first] + 2) << "";
             std::cout << paint(flag.second.description, "white", cli) << "\n";
         }
     }

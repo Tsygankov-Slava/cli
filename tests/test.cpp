@@ -66,16 +66,16 @@ TEST_F(CliFixture, ErrorUnknownCommandFlag) {
     const std::string cmdArguments = "./cli --nocolor printName -k";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: An unknown flag has been entered for the command "printName" -> "-k")", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: An unknown flag has been entered for the command "printName" -> "-k")", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
 }
@@ -86,16 +86,16 @@ TEST_F(CliFixture, ErrorUnknownCommand) {
     const std::string cmdArguments = "./cli --nocolor cmd";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: Unknown command -> "cmd")", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Unknown command -> "cmd")", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
 }
@@ -106,16 +106,16 @@ TEST_F(CliFixture, ErrorUnknownFlag) {
     const std::string cmdArguments = "./cli --nocolor -f";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: Unknown flag -> "-f")", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Unknown flag -> "-f")", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
 }
@@ -126,16 +126,16 @@ TEST_F(CliFixture, RequiredFlagNotEntered) {
     const std::string cmdArguments = "./cli --nocolor printName";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: Required flag not entered -> "--name" OR "-n")", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Required flag not entered -> "--name" OR "-n")", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
 }
@@ -146,16 +146,16 @@ TEST_F(CliFixture, CommandDoesNotExist) {
     const std::string cmdArguments = "./cli --nocolor help cmd";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: Command "cmd" doesn't exist)", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Command "cmd" doesn't exist)", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
 }
@@ -166,18 +166,43 @@ TEST_F(CliFixture, FlagMustAcceptAnArgument) {
     const std::string cmdArguments = "./cli --nocolor printName -n";
     char **argv = initArgv(argc, cmdArguments);
 
-    //Act
-    std::invalid_argument e = std::invalid_argument("");
-    try {
-        cli.parse(argc, argv);
-    } catch (const std::invalid_argument &error) {
-        e = error;
-    }
-
-    //Assert
-    EXPECT_STREQ(R"(ERROR: Flag "--name" must accept an argument)", e.what());
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Flag "--name" must accept an argument)", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
 
     deleteArgv(argc, argv);
+}
+
+void createAndWriteFileCurrentResult(const std::string &cmdArguments, const std::string &fileNameCurrentResult) {
+    const std::string cmd = R"(cd ../cmake-build-debug; rm -rf ../tests/current_results/)" + fileNameCurrentResult + R"(; )" + cmdArguments + R"( >> ../tests/current_results/)" + fileNameCurrentResult;
+    system(cmd.c_str());
+}
+
+std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult) {
+    std::ifstream inputCurrentResult(R"(../tests/current_results/)" + fileNameCurrentResult),
+            inputExpectedResult(R"(../tests/expected_results/)" + fileNameCurrentResult);
+    std::string currentCode, expectedCode;
+    if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
+        std::string line;
+
+        while (getline(inputCurrentResult, line)) {
+            currentCode += line;
+        }
+
+        while (getline(inputExpectedResult, line)) {
+            expectedCode += line;
+        }
+    } else {
+        throw std::invalid_argument(R"(File opening error)");
+    }
+    return std::make_pair(currentCode, expectedCode);
 }
 
 TEST_F(CliFixture, TestingPrintAllHelpFunction) {
@@ -185,61 +210,89 @@ TEST_F(CliFixture, TestingPrintAllHelpFunction) {
     int argc = 3;
     const std::string cmdArguments = "./cli --nocolor help";
     char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "1.txt";
 
     //Act
     cli.parse(argc, argv);
-    system("cd ../cmake-build-debug; rm -rf ../tests/current_results/1.txt; ./cli --nocolor help >> ../tests/current_results/1.txt");
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
 
     //Assert
-    std::ifstream inputCurrentResult("../tests/current_results/1.txt");
-    std::ifstream inputExpectedResult("../tests/expected_results/1.txt");
-    if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
-        std::string line;
-
-        std::string currentCode;
-        while (getline(inputCurrentResult, line)) {
-            currentCode += line;
-        }
-
-        std::string expectedCode;
-        while (getline(inputExpectedResult, line)) {
-            expectedCode += line;
-        }
-        ASSERT_EQ(currentCode, expectedCode);
-    } else {
-        EXPECT_FALSE(1);
-    }
+    ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
 
-TEST_F(CliFixture, TestingPrintCmdHelpFunction) {
+TEST_F(CliFixture, TestingPrintCmdHelpFunction_ManyCommands) {
     //Average
     int argc = 5;
     const std::string cmdArguments = "./cli --nocolor help printName printHello";
     char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "2.txt";
 
     //Act
     cli.parse(argc, argv);
-    system("cd ../cmake-build-debug; rm -rf ../tests/current_results/2.txt; ./cli --nocolor help printName printHello >> ../tests/current_results/2.txt");
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
 
     //Assert
-    std::ifstream inputCurrentResult("../tests/current_results/2.txt");
-    std::ifstream inputExpectedResult("../tests/expected_results/2.txt");
-    if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
-        std::string line;
+    ASSERT_EQ(currentCode, expectedCode);
+}
 
-        std::string currentCode;
-        while (getline(inputCurrentResult, line)) {
-            currentCode += line;
-        }
-        std::string expectedCode;
-        while (getline(inputExpectedResult, line)) {
-            expectedCode += line;
-        }
-        ASSERT_EQ(currentCode, expectedCode);
-    } else {
-        EXPECT_FALSE(1);
+TEST_F(CliFixture, TestingPrintCmdHelpFunction_OneCommand) {
+    //Average
+    int argc = 4;
+    const std::string cmdArguments = "./cli --nocolor help printName";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "3.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
     }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingFlagsWithValue) {
+    //Average
+    int argc = 7;
+    const std::string cmdArguments = "./cli --nocolor printName -n Name -s Surname";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "4.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
 
