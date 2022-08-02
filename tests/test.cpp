@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include <fstream>
 
-#include "../src/Cli/Cli.hpp"
+//#include "../src/Cli/Cli.hpp"
+#include "../build/cli.hpp"
 
 class CliFixture : public testing::Test {
 public:

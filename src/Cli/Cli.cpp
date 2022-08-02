@@ -105,6 +105,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
     std::string major = CLI_VERSION_MAJOR;
     std::string minor = CLI_VERSION_MINOR;
     std::string patch = CLI_VERSION_PATCH;
+
     std::cout << paint("CLI", "green", cli) + paint(" version ", "white", cli) + paint(major + "." + minor + '.' + patch, "yellow", cli) << "\n\n";
     std::cout << paint("Usage:\n", "yellow", cli) << paint("   command [flags] [arguments]\n\n", "white", cli) << paint("Commands:\n", "yellow", cli);
     std::map<std::string, int> sizes = getCmdSizes(commands);

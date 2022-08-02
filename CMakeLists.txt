@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(cli)
 
 set (CLI_VERSION_MAJOR 0)
-set (CLI_VERSION_MINOR 1)
+set (CLI_VERSION_MINOR 2)
 set (CLI_VERSION_PATCH 0)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -21,9 +21,13 @@ add_executable(cli src/main.cpp build/cli.hpp)
 configure_file(cli_config.h.in ../src/cli_config.h)
 
 #Test target
+#add_executable(
+#        test
+#        tests/test.cpp src/Cli/Cli.cpp src/Cli/Cli.hpp src/Flag/Flag.cpp src/Flag/Flag.hpp src/Command/Command.cpp src/Command/Command.hpp)
+
 add_executable(
-        test
-        tests/test.cpp src/Cli/Cli.cpp src/Cli/Cli.hpp src/Flag/Flag.cpp src/Flag/Flag.hpp src/Command/Command.cpp src/Command/Command.hpp)
+       test
+       tests/test.cpp build/cli.hpp)
 
 #Add src to the include directories for the test target
 target_include_directories(

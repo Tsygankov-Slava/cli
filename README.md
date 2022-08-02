@@ -169,6 +169,9 @@ Flag(name, shortName, description, isRequired, withValue)
 > $ help command1 command2
 > ```
 
+> Также можно контролировать цвет выводимой информации в консоль. \
+> По умолчанию вывод всей информации (документации или ошибок) стоит в цвете, но если запустить выполнение программы с флагом `--nocolor`, то весь вывод будет в стандартном белом цвете.
+
 ❗ Для полного понимая того, как использовать CLI в своём коде, см. раздел ["Пример использования"](#пример-использования)
 
 [🔝Оглавление](#оглавление)
@@ -226,7 +229,7 @@ Hello Vanya Sidorov!
 
 ```
 $ ./cli help
-CLI version 0.1.0
+CLI version 0.2.0
 
 Usage:
    command [flags] [arguments]
@@ -241,28 +244,28 @@ Commands:
 ```
 
 ```
-$ ./cli -f
+$ ./cli -f --nocolor
 ERROR: Unknown flag -> "-f"
 ```
 
 ```
-$ ./cli printHello -f
+$ ./cli printHello -f --nocolor
 Hello!
 ERROR: An unknown flag has been entered for the command "printName" -> "-f"
 ```
 
 ```
-$ ./cli cmd
+$ ./cli cmd --nocolor
 ERROR: Unknown command -> "cmd"
 ```
 
 ```
-$ ./cli printName
+$ ./cli printName --nocolor
 ERROR: Required flag not entered -> "--name" OR "-n"
 ```
 
 ```
-./cli printName -n
+./cli printName -n --nocolor
 ERROR: Flag "--name" must accept an argument
 ```
 [🔝Оглавление](#оглавление)
