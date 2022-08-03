@@ -65,6 +65,7 @@ namespace cli {
                 {"yellow", "\x1B[33m"},
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
+        int lineSizeOfDescription = 50;
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
@@ -75,10 +76,11 @@ namespace cli {
         static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName);
         static std::map<std::string, int> getCmdSizes(std::map<std::string, Command> &commands);
         static std::pair<int, char**> checkNocolor(cli::Cli &cli, int& argc, char **argv);
-        static std::string paint(const std::string &str, const std::string &color, cli::Cli cli);
+        static std::string paint(const std::string &str, const std::string &color, cli::Cli &cli);
+        static void lineWrapping(std::string& description, int maxSize, int flagSize, cli::Cli &cli);
 
     private:
-        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Displays background information and prompts all kinds of commands", "", {},
+        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Show help information.", "", {},
                                                                                   [this](FlagsType &parsedFlags) {
                                                                                       printAllHelp(this->commands, *this);
                                                                                   }))};
@@ -185,6 +187,45 @@ void cli::Cli::parse(int &argc, char **argv) {
     }
 }
 
+void cli::Cli::lineWrapping(std::string &description, const int maxSize, int flagSize, cli::Cli &cli) {
+    unsigned len, index = 0;
+    description += ' ';
+    std::string descriptionString;
+    while (index < description.size()) {
+        len = 0;
+        descriptionString = "";
+        while (index < description.size() && len < cli.lineSizeOfDescription) {
+            char symbol = description[index];
+            if (symbol == '\n') {
+                ++index;
+                break;
+            }
+            if (!(symbol == ' ' && descriptionString.empty())) {
+                descriptionString += symbol;
+            }
+            ++index;
+            ++len;
+            const unsigned distance = description.find_first_of(' ', index - 1) - index;
+            if (len >= cli.lineSizeOfDescription && distance > 0 && distance < 3) {
+                descriptionString += description.substr(index, description.find_first_of(' ', index - 1) - index);
+                index += distance + 1;
+            }
+        }
+        if (index != description.size() && description[index - 1] != ' ' && description[index] != ' ') {
+            descriptionString += '-';
+        }
+        if (flagSize != 0) {
+            descriptionString += ' ';
+            const unsigned spacePosition = descriptionString.find_first_of(' ', 0);
+            const std::string firstWorld = descriptionString.substr(0, spacePosition);
+            descriptionString = paint(firstWorld, "blue", cli) + descriptionString.substr(spacePosition, descriptionString.size());
+        }
+        std::cout << std::setw(maxSize - flagSize + 2) << "";
+        std::cout << descriptionString << "\n";
+        flagSize = 0;
+    }
+}
+
 void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &cli) {
     std::string major = CLI_VERSION_MAJOR;
     std::string minor = CLI_VERSION_MINOR;
@@ -198,11 +239,22 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
                         })->second;
     for (auto &cmd : commands) {
         std::string str = "  " + cmd.first;
+        int cmdSize = sizes[cmd.first];
+
+        std::string cmdDescription = cmd.second.description;
+        const unsigned spacePositionCmd = cmdDescription.find_first_of(' ', 0);
+        const std::string firstWorldCmd = cmdDescription.substr(0, spacePositionCmd);
+
         std::cout << paint(str, "green", cli);
-        std::cout << std::setw(maxSize - sizes[cmd.first] + 2) << "";
-        std::cout << paint(cmd.second.description, "white", cli) << "\n";
+        if (cmdDescription.size() < cli.lineSizeOfDescription) {
+            cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
+            std::cout << std::setw(maxSize - cmdSize + 2) << "";
+            std::cout << cmdDescription << "\n";
+        } else {
+            lineWrapping(cmdDescription, maxSize, cmdSize, cli);
+        }
         if (!cmd.second.commandFlags.empty()) {
-            std::cout << paint("\tFlags:\n", "yellow", cli);
+            std::cout << paint("    Flags:\n", "yellow", cli);
         }
         for (auto &flag : cmd.second.commandFlags) {
             str = "      -" + flag.second.shortName + ", --" + flag.first;
@@ -212,9 +264,20 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
             if (flag.second.isRequired) {
                 str += paint("[", "green", cli) + paint("REQUIRED", "red", cli) + paint("]", "green", cli);
             }
+
+            int flagSize = sizes[flag.first];
+            std::string flagDescription = flag.second.description;
+            const unsigned spacePositionFlag = flagDescription.find_first_of(' ', 0);
+            const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
+
             std::cout << paint(str, "green", cli);
-            std::cout << std::setw(maxSize - sizes[flag.first] + 2) << "";
-            std::cout << paint(flag.second.description, "white", cli) << "\n";
+            if (flagDescription.size() < cli.lineSizeOfDescription) {
+                flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
+                std::cout << std::setw(maxSize - flagSize + 2) << "";
+                std::cout << flagDescription << "\n";
+            } else {
+                lineWrapping(flagDescription, maxSize, flagSize, cli);
+            }
         }
     }
     std::cout << "\n";
@@ -253,10 +316,22 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
                         })->second;
     for (auto &cmdName : commandsName) {
         auto cmd = commands.at(cmdName);
+        int cmdSize = sizes[cmd.name];
+        std::string cmdDescription = cmd.description;
+        const unsigned spacePositionCmd = cmdDescription.find_first_of(' ', 0);
+        const std::string firstWorldCmd = cmdDescription.substr(0, spacePositionCmd);
+
         std::string str = "  " + cmd.name;
+
         std::cout << paint(str, "green", cli);
-        std::cout << std::setw(maxSize - sizes[cmdName] + 2) << "";
-        std::cout << paint(cmd.description, "white", cli) << "\n";
+        if (cmdDescription.size() < cli.lineSizeOfDescription) {
+            cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
+            std::cout << std::setw(maxSize - sizes[cmdName] + 2) << "";
+            std::cout << cmdDescription << "\n";
+        } else {
+            lineWrapping(cmdDescription, maxSize, cmdSize, cli);
+        }
+
         if (!cmd.commandFlags.empty()) {
             std::cout << paint("\tFlags:\n", "yellow", cli);
         }
@@ -268,9 +343,21 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
             if (flag.second.isRequired) {
                 str += paint("[", "green", cli) + paint("REQUIRED", "red", cli) + paint("]", "green", cli);
             }
+
+            int flagSize = sizes[flag.first];
+            std::string flagDescription = flag.second.description;
+            const unsigned spacePositionFlag = flagDescription.find_first_of(' ', 0);
+            const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
+
+
             std::cout << paint(str, "green", cli);
-            std::cout << std::setw(maxSize - sizes[flag.first] + 2) << " ";
-            std::cout << paint(flag.second.description, "white", cli) << "\n";
+            if (flagDescription.size() < cli.lineSizeOfDescription) {
+                flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
+                std::cout << std::setw(maxSize - sizes[flag.first] + 2) << " ";
+                std::cout << flagDescription << "\n";
+            } else {
+                lineWrapping(flagDescription, maxSize, flagSize, cli);
+            }
         }
         if (!cmd.example.empty()) {
             std::cout << paint("\tExample:", "yellow", cli) << paint("\n      ", "white", cli);
@@ -284,7 +371,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
         }
     }
 }
-std::string cli::Cli::paint(const std::string &str, const std::string &color, cli::Cli cli) {
+std::string cli::Cli::paint(const std::string &str, const std::string &color, cli::Cli &cli) {
     if (!cli.nocolor) {
         return cli.colors[color] + str + cli.colors["white"];
     }
