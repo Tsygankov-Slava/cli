@@ -186,10 +186,9 @@ void createAndWriteFileCurrentResult(const std::string &cmdArguments, const std:
     system(cmd.c_str());
 }
 
-std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult) {
+std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std::string &currentCode, std::string &expectedCode) {
     std::ifstream inputCurrentResult(R"(../tests/current_results/)" + fileNameCurrentResult),
             inputExpectedResult(R"(../tests/expected_results/)" + fileNameCurrentResult);
-    std::string currentCode, expectedCode;
     if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
         std::string line;
 
@@ -218,7 +217,7 @@ TEST_F(CliFixture, TestingPrintAllHelpFunction) {
     createAndWriteFileCurrentResult(cmdArguments, fileName);
     std::string currentCode, expectedCode;
     try {
-        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
     } catch (const std::invalid_argument &error) {
         std::cout << error.what();
         EXPECT_TRUE(1);
@@ -241,7 +240,7 @@ TEST_F(CliFixture, TestingPrintCmdHelpFunction_ManyCommands) {
     createAndWriteFileCurrentResult(cmdArguments, fileName);
     std::string currentCode, expectedCode;
     try {
-        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
     } catch (const std::invalid_argument &error) {
         std::cout << error.what();
         EXPECT_TRUE(1);
@@ -249,6 +248,7 @@ TEST_F(CliFixture, TestingPrintCmdHelpFunction_ManyCommands) {
 
     //Assert
     ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
 }
 
 TEST_F(CliFixture, TestingPrintCmdHelpFunction_OneCommand) {
@@ -263,7 +263,7 @@ TEST_F(CliFixture, TestingPrintCmdHelpFunction_OneCommand) {
     createAndWriteFileCurrentResult(cmdArguments, fileName);
     std::string currentCode, expectedCode;
     try {
-        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
     } catch (const std::invalid_argument &error) {
         std::cout << error.what();
         EXPECT_TRUE(1);
@@ -286,7 +286,7 @@ TEST_F(CliFixture, TestingFlagsWithValue) {
     createAndWriteFileCurrentResult(cmdArguments, fileName);
     std::string currentCode, expectedCode;
     try {
-        std::make_pair(currentCode, expectedCode) = getCurrentCodeAndExpectedCode(fileName);
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
     } catch (const std::invalid_argument &error) {
         std::cout << error.what();
         EXPECT_TRUE(1);
