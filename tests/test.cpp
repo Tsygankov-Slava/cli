@@ -17,11 +17,12 @@ public:
     }
 
     void SetUp() override {
-        cli.command("printHello", "Displays the word \"Hello!\"", "$ printHello \n >>> Hello!", {}, func)// Добавляем команду printHello
-                .command("printName", "Displays \"Hello [entered name]!\"", "$ printName -n Name\n>>> Hello Name!",
-                         {cli::Flag("name", "n", "A flag that accepts a name as input", true, true),
-                          cli::Flag("surname", "s", "A flag that accepts a surname for entry", true, true)},
-                         func2);
+        cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func) // Добавляем команду printHello
+                .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
+                         {
+                                 cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
+                                 cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
+                         }, func2);
     }
 };
 

@@ -55,6 +55,9 @@ void cli::Cli::parse(int &argc, char **argv) {
                 for (int j = i + 1; j < argc; ++j) {
                     cmd = argv[j];
                     if (!commands.count(cmd)) {
+                        if (cmd[0] == '-') {
+                            throw std::invalid_argument(paint(R"(ERROR: Flag ")" + cmd + R"(" doesn't exist)", "red", *this));
+                        }
                         throw std::invalid_argument(paint(R"(ERROR: Command ")" + cmd + R"(" doesn't exist)", "red", *this));
                     }
                     enteredCommands.push_back(cmd);
@@ -101,7 +104,7 @@ void cli::Cli::parse(int &argc, char **argv) {
     }
 }
 
-void cli::Cli::lineWrapping(std::string &description, const int maxSize, int flagSize, cli::Cli &cli) {
+void cli::Cli::lineWrapping(std::string &description, const int maxSize, int size, cli::Cli &cli) {
     unsigned len, index = 0;
     description += ' ';
     std::string descriptionString;
@@ -119,24 +122,40 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int fla
             }
             ++index;
             ++len;
-            const unsigned distance = description.find_first_of(' ', index - 1) - index;
-            if (len >= cli.lineSizeOfDescription && distance > 0 && distance < 3) {
-                descriptionString += description.substr(index, description.find_first_of(' ', index - 1) - index);
-                index += distance + 1;
+
+            if (len >= cli.lineSizeOfDescription) {
+                auto lastSpaceIndex = descriptionString.find_last_of(' ', descriptionString.size());
+                if (lastSpaceIndex == std::string::npos) {
+                    lastSpaceIndex = 0;
+                }
+                unsigned distance = descriptionString.size() - lastSpaceIndex;
+                if (distance > 0 && distance < 4) {
+                    unsigned countSymbols = 4 - distance;
+                    descriptionString += description.substr(index, countSymbols);
+                    index += countSymbols;
+                }
+                distance = description.find_first_of(' ', index - 1) - index;
+                if (distance > 0 && distance < 4) {
+                    descriptionString += description.substr(index, description.find_first_of(' ', index - 1) - index);
+                    index += distance + 1;
+                }
             }
         }
-        if (index != description.size() && description[index - 1] != ' ' && description[index] != ' ') {
+
+        if (index < description.size() && description[index - 1] != ' ' && description[index] != ' ') {
             descriptionString += '-';
         }
-        if (flagSize != 0) {
+        if (size != 0) {
             descriptionString += ' ';
             const unsigned spacePosition = descriptionString.find_first_of(' ', 0);
             const std::string firstWorld = descriptionString.substr(0, spacePosition);
             descriptionString = paint(firstWorld, "blue", cli) + descriptionString.substr(spacePosition, descriptionString.size());
         }
-        std::cout << std::setw(maxSize - flagSize + 2) << "";
-        std::cout << descriptionString << "\n";
-        flagSize = 0;
+        if (!descriptionString.empty()) {
+            std::cout << std::setw(maxSize - size + 2) << "";
+            std::cout << descriptionString << "\n";
+        }
+        size = 0;
     }
 }
 
@@ -191,6 +210,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
                 std::cout << flagDescription << "\n";
             } else {
                 lineWrapping(flagDescription, maxSize, flagSize, cli);
+
             }
         }
     }

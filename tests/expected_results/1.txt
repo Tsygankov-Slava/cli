@@ -5,9 +5,9 @@ Usage:
 
 Commands:
   help                               Show help information.
-  printHello                         Displays the word "Hello!"
-  printName                          Displays "Hello [entered name]!"
+  printHello                         Displays the word "Hello!".
+  printName                          Displays "Hello [entered name]!".
     Flags:
-      -n, --name=VALUE[REQUIRED]     A flag that accepts a name as input
-      -s, --surname=VALUE[REQUIRED]  A flag that accepts a surname for entry
+      -n, --name=VALUE[REQUIRED]     A flag that accepts a name as input.
+      -s, --surname=VALUE[REQUIRED]  A flag that accepts a surname for entry.
 

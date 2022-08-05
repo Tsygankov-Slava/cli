@@ -16,7 +16,9 @@ namespace cli {
                 {"yellow", "\x1B[33m"},
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
-        int lineSizeOfDescription = 50;
+        const int lineSizeOfDescription;
+
+        explicit Cli(int lineSizeOfDescription = 50) : lineSizeOfDescription(lineSizeOfDescription){};
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
@@ -26,9 +28,9 @@ namespace cli {
         static std::string checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags, cli::Cli &cli);
         static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName);
         static std::map<std::string, int> getCmdSizes(std::map<std::string, Command> &commands);
-        static std::pair<int, char**> checkNocolor(cli::Cli &cli, int& argc, char **argv);
+        static std::pair<int, char **> checkNocolor(cli::Cli &cli, int &argc, char **argv);
         static std::string paint(const std::string &str, const std::string &color, cli::Cli &cli);
-        static void lineWrapping(std::string& description, int maxSize, int flagSize, cli::Cli &cli);
+        static void lineWrapping(std::string &description, int maxSize, int flagSize, cli::Cli &cli);
 
     private:
         std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Show help information.", "", {},
