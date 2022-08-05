@@ -4,4 +4,4 @@
 
 #define CLI_VERSION_MINOR "2"
 
-#define CLI_VERSION_PATCH "0"
+#define CLI_VERSION_PATCH "1"
