@@ -1,6 +1,5 @@
 # Command Line Interface (CLI)
 
----
 [![Build](https://github.com/Tsygankov-Slava/cli/actions/workflows/build.yml/badge.svg)](https://github.com/Tsygankov-Slava/cli/actions/workflows/build.yml)
 
 
