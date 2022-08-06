@@ -10,7 +10,6 @@ env:
 
 jobs:
   build:
-    name: MacOS
     runs-on: macos-latest
 
     steps:
