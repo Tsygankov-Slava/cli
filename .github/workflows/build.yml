@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    strategy:
+     matrix:
+      os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build-release-cli -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build-release-cli --config ${{env.BUILD_TYPE}}
+
+      - name: Tests
+        run: |
+          cd build-release-cli
+          ./test
+
