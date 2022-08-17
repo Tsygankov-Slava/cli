@@ -187,7 +187,7 @@ void createAndWriteFileCurrentResult(const std::string &cmdArguments, const std:
     system(cmd.c_str());
 }
 
-std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std::string &currentCode, std::string &expectedCode) {
+void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std::string &currentCode, std::string &expectedCode) {
     std::ifstream inputCurrentResult(R"(../tests/current_results/)" + fileNameCurrentResult),
             inputExpectedResult(R"(../tests/expected_results/)" + fileNameCurrentResult);
     if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
@@ -195,7 +195,6 @@ std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::str
 
         while (getline(inputCurrentResult, line)) {
             line.erase(remove(line.begin(),line.end(),' '),line.end());
-            line.erase(remove(line.begin(),line.end(),'\n'),line.end());
             currentCode += line;
         }
 
@@ -207,7 +206,9 @@ std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::str
     } else {
         throw std::invalid_argument(R"(File opening error)");
     }
-    return std::make_pair(currentCode, expectedCode);
+
+    currentCode.erase(remove(currentCode.begin(),currentCode.end(),'\n'),currentCode.end());
+    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),'\n'),expectedCode.end());
 }
 
 TEST_F(CliFixture, TestingPrintAllHelpFunction) {
