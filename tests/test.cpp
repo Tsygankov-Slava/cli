@@ -227,6 +227,7 @@ TEST_F(CliFixture, TestingPrintAllHelpFunction) {
     }
 
     //Assert
+    std::cout << "\nSTART\n" << currentCode << "\n-----------\n" << expectedCode << "\nEND\n";
     ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
