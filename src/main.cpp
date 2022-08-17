@@ -5,7 +5,7 @@ void func(cli::FlagsType &parsedFlags); // Объявляем функцию, к
 void func2(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printName
 
 int main(int argc, char **argv) {
-    auto cli = cli::Cli();
+    auto cli = cli::Cli(7);
     try {
         cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func) // Добавляем команду printHello
                 .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
