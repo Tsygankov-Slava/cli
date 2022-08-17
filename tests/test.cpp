@@ -195,11 +195,13 @@ std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::str
 
         while (getline(inputCurrentResult, line)) {
             line.erase(remove(line.begin(),line.end(),' '),line.end());
+            line.erase(remove(line.begin(),line.end(),'\n'),line.end());
             currentCode += line;
         }
 
         while (getline(inputExpectedResult, line)) {
             line.erase(remove(line.begin(),line.end(),' '),line.end());
+            line.erase(remove(line.begin(),line.end(),'\n'),line.end());
             expectedCode += line;
         }
     } else {
