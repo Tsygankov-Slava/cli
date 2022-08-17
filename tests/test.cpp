@@ -194,13 +194,17 @@ void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std
         std::string line;
 
         while (getline(inputCurrentResult, line)) {
-            line.erase(remove(line.begin(),line.end(),' '),line.end());
-            currentCode += line;
+            if (!line.empty()) {
+                line.erase(remove(line.begin(), line.end(), ' '), line.end());
+                currentCode += line;
+            }
         }
 
         while (getline(inputExpectedResult, line)) {
-            line.erase(remove(line.begin(),line.end(),' '),line.end());
-            expectedCode += line;
+            if (!line.empty()) {
+                line.erase(remove(line.begin(), line.end(), ' '), line.end());
+                expectedCode += line;
+            }
         }
     } else {
         throw std::invalid_argument(R"(File opening error)");
