@@ -193,13 +193,13 @@ void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std
     if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
         std::string line;
 
-        while (getline(inputCurrentResult, line)) {
+        while (getline(inputCurrentResult, line, '\n')) {
             if (!line.empty()) {
                 currentCode += line;
             }
         }
 
-        while (getline(inputExpectedResult, line)) {
+        while (getline(inputExpectedResult, line, '\n')) {
             if (!line.empty()) {
                 expectedCode += line;
             }
