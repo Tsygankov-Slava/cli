@@ -18,4 +18,3 @@ Command:
 	Example:
       $ printName -n Name
       >>> Hello Name!
-

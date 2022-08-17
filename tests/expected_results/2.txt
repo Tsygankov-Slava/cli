@@ -25,4 +25,3 @@ Commands:
 	Example:
       $ printHello
       >>> Hello!
-
