@@ -4,19 +4,22 @@ Usage:
    command [flags] [arguments]
 
 Commands:
-  help                               Show help inf-
-                                     ormation.
-  printHello                         Displays the
-                                     word "Hel-
-                                     lo!".
-  printName                          Displays "Hello
-                                     [entered nam-
+  help                               Show help
+                                     informa-
+                                     tion.
+  printHello                         Displays
+                                     the word
+                                     "Hello!".
+  printName                          Displays
+                                     "Hello [en-
+                                     tered nam-
                                      e]!".
     Flags:
       -n, --name=VALUE[REQUIRED]     A flag that
-                                     accepts a name
+                                     accepts
+                                     a name
                                      as input.
       -s, --surname=VALUE[REQUIRED]  A flag that
-                                     accepts a sur-
-                                     name for entry.
-
+                                     accepts
+                                     a surname
+                                     for entry.
