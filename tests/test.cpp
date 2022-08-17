@@ -187,25 +187,31 @@ void createAndWriteFileCurrentResult(const std::string &cmdArguments, const std:
     system(cmd.c_str());
 }
 
-std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std::string &currentCode, std::string &expectedCode) {
+void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std::string &currentCode, std::string &expectedCode) {
     std::ifstream inputCurrentResult(R"(../tests/current_results/)" + fileNameCurrentResult),
             inputExpectedResult(R"(../tests/expected_results/)" + fileNameCurrentResult);
     if (inputCurrentResult.is_open() && inputExpectedResult.is_open()) {
         std::string line;
 
-        while (getline(inputCurrentResult, line)) {
-            line.erase(remove(line.begin(),line.end(),' '),line.end());
-            currentCode += line;
+        while (getline(inputCurrentResult, line, '\n')) {
+            if (!line.empty()) {
+                currentCode += line;
+            }
         }
 
-        while (getline(inputExpectedResult, line)) {
-            line.erase(remove(line.begin(),line.end(),' '),line.end());
-            expectedCode += line;
+        while (getline(inputExpectedResult, line, '\n')) {
+            if (!line.empty()) {
+                expectedCode += line;
+            }
         }
     } else {
         throw std::invalid_argument(R"(File opening error)");
     }
-    return std::make_pair(currentCode, expectedCode);
+
+    currentCode.erase(remove(currentCode.begin(),currentCode.end(),'\n'),currentCode.end());
+    currentCode.erase(remove(currentCode.begin(),currentCode.end(),' '),currentCode.end());
+    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),'\n'),expectedCode.end());
+    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),' '),expectedCode.end());
 }
 
 TEST_F(CliFixture, TestingPrintAllHelpFunction) {
@@ -227,6 +233,7 @@ TEST_F(CliFixture, TestingPrintAllHelpFunction) {
     }
 
     //Assert
+    std::cout << "\nSTART\n" << currentCode << "\n-----------\n" << expectedCode << "\nEND\n";
     ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
