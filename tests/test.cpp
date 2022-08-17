@@ -6,7 +6,7 @@
 
 class CliFixture : public testing::Test {
 public:
-    cli::Cli cli = cli::Cli();
+    cli::Cli cli = cli::Cli(7);
 
     static void func(cli::FlagsType &parsedFlags) {// Определение функции команды printHello
         std::cout << "Hello!\n";
@@ -194,10 +194,12 @@ std::pair<std::string, std::string> getCurrentCodeAndExpectedCode(const std::str
         std::string line;
 
         while (getline(inputCurrentResult, line)) {
+            line.erase(remove(line.begin(),line.end(),' '),line.end());
             currentCode += line;
         }
 
         while (getline(inputExpectedResult, line)) {
+            line.erase(remove(line.begin(),line.end(),' '),line.end());
             expectedCode += line;
         }
     } else {
