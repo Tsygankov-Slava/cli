@@ -298,6 +298,26 @@ TEST_F(CliFixture, TestingFlagsWithValue) {
     deleteArgv(argc, argv);
 }
 
+TEST_F(CliFixture, TestingErrorFlagDoesNotExist) {
+    //Average
+    int argc = 5;
+    const std::string cmdArguments = "./cli --nocolor help printName --flag";
+    char **argv = initArgv(argc, cmdArguments);
+
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Flag "--flag" doesn't exist)", e.what());
+            throw;
+        }
+    },
+                 std::invalid_argument);
+
+    deleteArgv(argc, argv);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
