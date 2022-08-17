@@ -195,14 +195,12 @@ void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std
 
         while (getline(inputCurrentResult, line)) {
             if (!line.empty()) {
-                line.erase(remove(line.begin(), line.end(), ' '), line.end());
                 currentCode += line;
             }
         }
 
         while (getline(inputExpectedResult, line)) {
             if (!line.empty()) {
-                line.erase(remove(line.begin(), line.end(), ' '), line.end());
                 expectedCode += line;
             }
         }
@@ -211,9 +209,9 @@ void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std
     }
 
     currentCode.erase(remove(currentCode.begin(),currentCode.end(),'\n'),currentCode.end());
-    currentCode.erase(remove(currentCode.begin(),currentCode.end(),'\r'),currentCode.end());
+    currentCode.erase(remove(currentCode.begin(),currentCode.end(),' '),currentCode.end());
     expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),'\n'),expectedCode.end());
-    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),'\r'),expectedCode.end());
+    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),' '),expectedCode.end());
 }
 
 TEST_F(CliFixture, TestingPrintAllHelpFunction) {
