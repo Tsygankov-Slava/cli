@@ -5,24 +5,19 @@ Usage:
 
 Commands:
   help                               Show help
-                                     informa-
-                                     tion.
-  printHello                         Displays
-                                     the word
-                                     "Hello!".
-  printName                          Displays
-                                     "Hello
-                                     [entered
-                                     name]!".
+                                     information.
+  printHello                         Displays the
+                                     word "Hell-
+                                     o!".
+  printName                          Displays "Hello
+                                     [entered nam-
+                                     e]!".
     Flags:
-      -n, --name=VALUE[REQUIRED]     A flag
-                                     that acc-
-                                     epts a
-                                     name as
-                                     input.
-      -s, --surname=VALUE[REQUIRED]  A flag
-                                     that acc-
-                                     epts a
-                                     surname
-                                     for entry.
+      -n, --name=VALUE[REQUIRED]     A flag that
+                                     accepts a
+                                     name as input.
+      -s, --surname=VALUE[REQUIRED]  A flag that
+                                     accepts a
+                                     surname for
+                                     entry.
 
