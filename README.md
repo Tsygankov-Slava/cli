@@ -89,15 +89,16 @@ $ make clean
 
 ### Некоторые правила использования:
 
-1. Для того чтобы начать использовать наш CLI сначала надо создать объект `Cli`:
+1. Для того чтобы начать использовать CLI сначала надо создать объект `Cli`:
 
 ```c++
 auto cli = cli::Cli();
 ```
 
-> P.S. При создании объекта можно в параметры передать размер описания команд и флагов в консоли
+> P.S. У объекта можно вызвать метод `setDescriptionMaxWidth` и передать в него желаемый размер поля для описания
 > ```c++
-> auto cli = cli::Cli(20);
+> auto cli = cli::Cli();
+> cli.setDescriptionMaxWidth(7);
 > ```
 > ❗ По умолчанию стоит 50 символов.
 > 
@@ -110,10 +111,10 @@ auto cli = cli::Cli();
 > - 10 символов:
 > ```c++
 > Command:
-> help                               Show help inf-
->                                    ormation.
+> help                               Show help  
+>                                    information.
 > ```
-> ❗ При использовании этой функции стоит обращать внимание, что существует реализация переноса слов.  
+> ❗ При использовании этого метода стоит обращать внимание, что существует реализация переноса слов.  
 > Перенос работает по правилу "не оставлять меньше 3 символов до/после дефиса".
 
 2. Чтобы описать `команду` нужно использовать следующий синтаксис: 
@@ -179,7 +180,6 @@ Flag(name, shortName, description, isRequired, withValue)
 # Пример использования
 
 ```c++
-//#include "Cli/Cli.hpp"
 #include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
 void func(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
@@ -187,28 +187,30 @@ void func2(cli::FlagsType &parsedFlags);// Объявляем функцию, к
 
 int main(int argc, char **argv) {
     auto cli = cli::Cli();
+    cli.setDescriptionMaxWidth(7); // Устанавливаем ширину поля под описание в 7 символов 
     try {
         cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
            .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
                 {
                     cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
                     cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
-                }, func2)                   // Добавляем команду printName и указываем флаги name и surname
-           .parse(argc, argv);               // Обязательно вызываем функцию parse c аргументами argc и argv
-    } catch (const std::invalid_argument &error) {// Обрабатываем какие-либо ошибки
-        std::cout << error.what() << "\n"; // // Обязательно при выводе ошибок поставить символ переноса строки, иначе возможен вывод странных символов
-        return 2;// код завершения программы при ошибке
+                },func2)                           // Добавляем команду printName и указываем флаги name и surname
+                .parse(argc, argv);                // Обязательно вызываем функцию parse c аргументами argc и argv
+    } catch (const std::invalid_argument &error) { // Обрабатываем какие-либо ошибки
+        std::cout << error.what() << "\n"; // Обязательно при выводе ошибок поставить символ переноса строки, иначе возможен вывод странных символов
+        return 2; // Код завершения программы при ошибке
     }
     return 0;
 }
 
-void func(cli::FlagsType &parsedFlags) {// Определение функции команды printHello
+void func(cli::FlagsType &parsedFlags) { // Определение функции команды printHello
     std::cout << "Hello!\n";
 }
 
-void func2(cli::FlagsType &parsedFlags) {// Определение функции команды printName
+void func2(cli::FlagsType &parsedFlags) { // Определение функции команды printName
     std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
 }
+
 ```
 
 ### Примеры запуска в терминале:

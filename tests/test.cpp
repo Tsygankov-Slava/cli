@@ -6,7 +6,7 @@
 
 class CliFixture : public testing::Test {
 public:
-    cli::Cli cli = cli::Cli(7);
+    cli::Cli cli = cli::Cli();
 
     static void func(cli::FlagsType &parsedFlags) {// Определение функции команды printHello
         std::cout << "Hello!\n";
@@ -17,6 +17,7 @@ public:
     }
 
     void SetUp() override {
+        cli.setDescriptionMaxWidth(7);
         cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
                 .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
                          {cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),

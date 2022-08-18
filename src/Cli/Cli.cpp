@@ -6,6 +6,11 @@ cli::Cli &cli::Cli::command(const std::string &name, const std::string &descript
     return *this;
 }
 
+cli::Cli &cli::Cli::setDescriptionMaxWidth(const int value) {
+    descriptionMaxWidth = value;
+    return *this;
+}
+
 std::string cli::Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlags, std::map<std::string, Flag> &commandFlags, cli::Cli &cli) {
     for (auto &commandFlag : commandFlags) {
         auto flag = commandFlag.second;
@@ -28,7 +33,7 @@ std::string cli::Cli::flagInCommand(std::map<std::string, Flag> &commandFlags, s
     return "";
 }
 
-std::pair<int, char **> cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **argv) {
+void cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **argv) {
     std::string cmd;
     for (int i = 0; i < argc; ++i) {
         cmd = argv[i];
@@ -40,7 +45,6 @@ std::pair<int, char **> cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **
             }
         }
     }
-    return std::make_pair(argc, argv);
 }
 
 void cli::Cli::parse(int &argc, char **argv) {
@@ -111,7 +115,7 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
     while (index < description.size()) {
         len = 0;
         descriptionString = "";
-        while (index < description.size() && len < cli.DescriptionMaxWidth) {
+        while (index < description.size() && len < cli.descriptionMaxWidth) {
             char symbol = description[index];
             if (symbol == '\n') {
                 ++index;
@@ -123,7 +127,7 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
             }
             ++index;
 
-            if ((len >= cli.DescriptionMaxWidth) && (symbol != ' ')) {
+            if ((len >= cli.descriptionMaxWidth) && (symbol != ' ')) {
                 auto lastSpaceIndex = descriptionString.find_last_of(' ', descriptionString.size());
                 if (lastSpaceIndex == std::string::npos) {
                     lastSpaceIndex = 0;
@@ -179,7 +183,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
         const std::string firstWorldCmd = cmdDescription.substr(0, spacePositionCmd);
 
         std::cout << paint(str, "green", cli);
-        if (cmdDescription.size() < cli.DescriptionMaxWidth) {
+        if (cmdDescription.size() < cli.descriptionMaxWidth) {
             cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - cmdSize + 2) << "";
             std::cout << cmdDescription << "\n";
@@ -204,13 +208,12 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
             const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
 
             std::cout << paint(str, "green", cli);
-            if (flagDescription.size() < cli.DescriptionMaxWidth) {
+            if (flagDescription.size() < cli.descriptionMaxWidth) {
                 flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - flagSize + 2) << "";
                 std::cout << flagDescription << "\n";
             } else {
                 lineWrapping(flagDescription, maxSize, flagSize, cli);
-
             }
         }
     }
@@ -258,7 +261,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
         std::string str = "  " + cmd.name;
 
         std::cout << paint(str, "green", cli);
-        if (cmdDescription.size() < cli.DescriptionMaxWidth) {
+        if (cmdDescription.size() < cli.descriptionMaxWidth) {
             cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - sizes[cmdName] + 2) << "";
             std::cout << cmdDescription << "\n";
@@ -285,7 +288,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
 
 
             std::cout << paint(str, "green", cli);
-            if (flagDescription.size() < cli.DescriptionMaxWidth) {
+            if (flagDescription.size() < cli.descriptionMaxWidth) {
                 flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - sizes[flag.first] + 2) << " ";
                 std::cout << flagDescription << "\n";
