@@ -1,11 +1,11 @@
-//#include "Cli/Cli.hpp"
-#include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
+#include "Cli/Cli.hpp"
+//#include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
 void func(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
 void func2(cli::FlagsType &parsedFlags);// Объявляем функцию, которая будет вызывать при вызове команды printName
 
 int main(int argc, char **argv) {
-    auto cli = cli::Cli(7);
+    auto cli = cli::Cli().setDescriptionMaxWidth(7);
     try {
         cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
            .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",

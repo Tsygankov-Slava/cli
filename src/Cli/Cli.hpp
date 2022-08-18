@@ -16,9 +16,11 @@ namespace cli {
                 {"yellow", "\x1B[33m"},
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
-        const int lineSizeOfDescription;
 
-        explicit Cli(int lineSizeOfDescription = 50) : lineSizeOfDescription(lineSizeOfDescription){};
+        Cli &setDescriptionMaxWidth(const int DescriptionMaxWidth_) {
+            DescriptionMaxWidth = DescriptionMaxWidth_;
+            return *this;
+        };
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
@@ -37,5 +39,6 @@ namespace cli {
                                                                                   [this](FlagsType &parsedFlags) {
                                                                                       printAllHelp(this->commands, *this);
                                                                                   }))};
+        int DescriptionMaxWidth = 50;
     };
 }// namespace cli

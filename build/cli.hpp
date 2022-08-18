@@ -65,9 +65,11 @@ namespace cli {
                 {"yellow", "\x1B[33m"},
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
-        const int lineSizeOfDescription;
 
-        explicit Cli(int lineSizeOfDescription = 50) : lineSizeOfDescription(lineSizeOfDescription){};
+        Cli &setDescriptionMaxWidth(const int DescriptionMaxWidth_) {
+            DescriptionMaxWidth = DescriptionMaxWidth_;
+            return *this;
+        };
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action);
 
@@ -86,6 +88,7 @@ namespace cli {
                                                                                   [this](FlagsType &parsedFlags) {
                                                                                       printAllHelp(this->commands, *this);
                                                                                   }))};
+        int DescriptionMaxWidth = 50;
     };
 }// namespace cli
 cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action) {
@@ -199,7 +202,7 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
     while (index < description.size()) {
         len = 0;
         descriptionString = "";
-        while (index < description.size() && len < cli.lineSizeOfDescription) {
+        while (index < description.size() && len < cli.DescriptionMaxWidth) {
             char symbol = description[index];
             if (symbol == '\n') {
                 ++index;
@@ -211,7 +214,7 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
             }
             ++index;
 
-            if ((len >= cli.lineSizeOfDescription) && (symbol != ' ')) {
+            if ((len >= cli.DescriptionMaxWidth) && (symbol != ' ')) {
                 auto lastSpaceIndex = descriptionString.find_last_of(' ', descriptionString.size());
                 if (lastSpaceIndex == std::string::npos) {
                     lastSpaceIndex = 0;
@@ -267,7 +270,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
         const std::string firstWorldCmd = cmdDescription.substr(0, spacePositionCmd);
 
         std::cout << paint(str, "green", cli);
-        if (cmdDescription.size() < cli.lineSizeOfDescription) {
+        if (cmdDescription.size() < cli.DescriptionMaxWidth) {
             cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - cmdSize + 2) << "";
             std::cout << cmdDescription << "\n";
@@ -292,7 +295,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
             const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
 
             std::cout << paint(str, "green", cli);
-            if (flagDescription.size() < cli.lineSizeOfDescription) {
+            if (flagDescription.size() < cli.DescriptionMaxWidth) {
                 flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - flagSize + 2) << "";
                 std::cout << flagDescription << "\n";
@@ -346,7 +349,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
         std::string str = "  " + cmd.name;
 
         std::cout << paint(str, "green", cli);
-        if (cmdDescription.size() < cli.lineSizeOfDescription) {
+        if (cmdDescription.size() < cli.DescriptionMaxWidth) {
             cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - sizes[cmdName] + 2) << "";
             std::cout << cmdDescription << "\n";
@@ -373,7 +376,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
 
 
             std::cout << paint(str, "green", cli);
-            if (flagDescription.size() < cli.lineSizeOfDescription) {
+            if (flagDescription.size() < cli.DescriptionMaxWidth) {
                 flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - sizes[flag.first] + 2) << " ";
                 std::cout << flagDescription << "\n";
