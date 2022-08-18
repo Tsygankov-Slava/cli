@@ -17,12 +17,11 @@ public:
     }
 
     void SetUp() override {
-        cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func) // Добавляем команду printHello
+        cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
                 .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
-                         {
-                                 cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
-                                 cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
-                         }, func2);
+                         {cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
+                          cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)},
+                         func2);
     }
 };
 
@@ -208,10 +207,10 @@ void getCurrentCodeAndExpectedCode(const std::string &fileNameCurrentResult, std
         throw std::invalid_argument(R"(File opening error)");
     }
 
-    currentCode.erase(remove(currentCode.begin(),currentCode.end(),'\n'),currentCode.end());
-    currentCode.erase(remove(currentCode.begin(),currentCode.end(),' '),currentCode.end());
-    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),'\n'),expectedCode.end());
-    expectedCode.erase(remove(expectedCode.begin(),expectedCode.end(),' '),expectedCode.end());
+    currentCode.erase(remove(currentCode.begin(), currentCode.end(), '\n'), currentCode.end());
+    currentCode.erase(remove(currentCode.begin(), currentCode.end(), ' '), currentCode.end());
+    expectedCode.erase(remove(expectedCode.begin(), expectedCode.end(), '\n'), expectedCode.end());
+    expectedCode.erase(remove(expectedCode.begin(), expectedCode.end(), ' '), expectedCode.end());
 }
 
 TEST_F(CliFixture, TestingPrintAllHelpFunction) {
@@ -233,7 +232,6 @@ TEST_F(CliFixture, TestingPrintAllHelpFunction) {
     }
 
     //Assert
-    std::cout << "\nSTART\n" << currentCode << "\n-----------\n" << expectedCode << "\nEND\n";
     ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
