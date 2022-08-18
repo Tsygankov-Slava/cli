@@ -119,11 +119,11 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
             }
             if (!(symbol == ' ' && descriptionString.empty())) {
                 descriptionString += symbol;
+                ++len;
             }
             ++index;
-            ++len;
 
-            if (len >= cli.lineSizeOfDescription) {
+            if ((len >= cli.lineSizeOfDescription) && (symbol != ' ')) {
                 auto lastSpaceIndex = descriptionString.find_last_of(' ', descriptionString.size());
                 if (lastSpaceIndex == std::string::npos) {
                     lastSpaceIndex = 0;
