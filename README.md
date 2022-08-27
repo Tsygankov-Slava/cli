@@ -130,7 +130,7 @@ command(name, description, example, {flags}, action, argumentsCount = 0, canCont
 | `flags`                       | `Flags`           | задаются флаги                                                                                              |
 | `action`                      | `CommandCallback` | имя функции, которая будет выполняться при вызове данной команды                                            |
 | `argumentsCount`              | `int`             | кол-во аргументов, которые команда может принять (если указать `-1`, то кол-во аргументов может быть любое) |
-| `canContainEmptyArgumentList` | `bool`            | флаг, разрешающий не принимать аргументов (имеет значение только если `argumentsCount = -1`)                |
+| `canContainEmptyArgumentList` | `bool`            | флаг, разрешающий не принимать аргументов (имеет значение если `argumentsCount = -1`)                |
   
 >```c++
 >❗ Тип Flags - множество объектов класса Flag (как определять Flag показывается ниже)
@@ -342,7 +342,7 @@ ERROR: Command "printTwoArguments" must contain 2 arguments
 
 
 ```
-$ ./cli printFlagsAndArguments file1.txt --dir directory/ file2.txt"
+$ ./cli printFlagsAndArguments file1.txt --dir directory/ file2.txt
 Flags: 
 dir -> directory/
 Arguments: 
