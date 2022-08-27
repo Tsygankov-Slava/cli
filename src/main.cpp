@@ -1,5 +1,5 @@
-#include "Cli/Cli.hpp"
-//#include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
+//#include "Cli/Cli.hpp"
+#include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
 
 void func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments);  // Объявляем функцию, которая будет вызывать при вызове команды printArguments
