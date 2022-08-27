@@ -21,7 +21,7 @@ public:
         std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
     }
 
-    static void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {           // Определение функции команды printArguments
+    static void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Flags: \n";
         for (auto &flag: parsedFlags) {
             std::cout << flag.first << " -> " << flag.second.value << "\n";

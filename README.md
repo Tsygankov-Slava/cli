@@ -81,11 +81,11 @@ $ make clean
 
 # Описание
 
-При использовании CLI стоит различать два понятия `команда` и `флаг`.
-Нужно понимать, что пользователь вводит `команду`, когда хочет выполнить какое-то действие, а `флаг` он вводит для того, чтобы указать, что действие `команды` будет выполняться по каким-то правилам и с какими-то переданными значениями. \
+При использовании CLI стоит различать три понятия `команда`, `аргумент` и `флаг`.
+Нужно понимать, что пользователь вводит `команду`, когда хочет выполнить какое-то действие, `аргумент`, чтобы передать в `команду` информацию с которой в дальнейшем работать, а `флаг` он вводит для того, чтобы указать, что действие `команды` будет выполняться по каким-то правилам и с какими-то переданными значениями. \
 Исходя из вышесказанного, можно вывести одно очень простое правило: 
 
-> ❗ Команда может содержать некое количество флагов, но не наоборот.
+> ❗ Команда может содержать некое количество флагов и аргументов, но никак иначе.
 
 ### Некоторые правила использования:
 
@@ -120,15 +120,17 @@ auto cli = cli::Cli();
 2. Чтобы описать `команду` нужно использовать следующий синтаксис: 
 
 ```c++
-command(name, description, example, {flags}, action);
+command(name, description, example, {flags}, action, argumentsCount = 0, canContainEmptyArgumentList = false);
 ```
-| Поле          | Тип               | Описание                                                         |
-|---------------|-------------------|------------------------------------------------------------------|
-| `name`        | `string`          | имя команды                                                      |
-| `description` | `string`          | описание команды                                                 |
-| `example`     | `string`          | пример использования команды                                     |
-| `flags`       | `Flags`           | задаются флаги                                                   |
-| `action`      | `CommandCallback` | имя функции, которая будет выполняться при вызове данной команды |
+| Поле                          | Тип               | Описание                                                                                                    |
+|-------------------------------|-------------------|-------------------------------------------------------------------------------------------------------------|
+| `name`                        | `string`          | имя команды                                                                                                 |
+| `description`                 | `string`          | описание команды                                                                                            |
+| `example`                     | `string`          | пример использования команды                                                                                |
+| `flags`                       | `Flags`           | задаются флаги                                                                                              |
+| `action`                      | `CommandCallback` | имя функции, которая будет выполняться при вызове данной команды                                            |
+| `argumentsCount`              | `int`             | кол-во аргументов, которые команда может принять (если указать `-1`, то кол-во аргументов может быть любое) |
+| `canContainEmptyArgumentList` | `bool`            | флаг, разрешающий не принимать аргументов (имеет значение только если `argumentsCount = -1`)                |
   
 >```c++
 >❗ Тип Flags - множество объектов класса Flag (как определять Flag показывается ниже)
@@ -180,37 +182,67 @@ Flag(name, shortName, description, isRequired, withValue)
 # Пример использования
 
 ```c++
-#include "../build/cli.hpp"// Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
+#include "../build/cli.hpp" // Подключаем нашу библиотеку для использования CLI (путь до библиотеки может отличаться)
 
-void func(cli::FlagsType &parsedFlags); // Объявляем функцию, которая будет вызывать при вызове команды printHello
-void func2(cli::FlagsType &parsedFlags);// Объявляем функцию, которая будет вызывать при вызове команды printName
+
+void func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments);  // Объявляем функцию, которая будет вызывать при вызове команды printArguments
+void func2(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments); // Объявляем функцию, которая будет вызывать при вызове команды printHello
+void func3(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments); // Объявляем функцию, которая будет вызывать при вызове команды printName
+void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments); // Объявляем функцию, которая будет вызывать при вызове команды printFlagsAndArguments
 
 int main(int argc, char **argv) {
-    auto cli = cli::Cli();
-    cli.setDescriptionMaxWidth(7); // Устанавливаем ширину поля под описание в 7 символов 
+    auto cli = cli::Cli();         // Создаём объект класса Cli
+    cli.setDescriptionMaxWidth(7); // Задаём ширину описания
+
     try {
-        cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
+        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", {}, func, -1) // Добавляем команду printArguments
+           .command("printTwoArguments", "Displays the passed arguments", "", {}, func, 2)                                                                              // Добавляем команду printTwoArguments
+           .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func2)                                                              // Добавляем команду printHello
            .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
-                {
-                    cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
-                    cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
-                },func2)                           // Добавляем команду printName и указываем флаги name и surname
-                .parse(argc, argv);                // Обязательно вызываем функцию parse c аргументами argc и argv
-    } catch (const std::invalid_argument &error) { // Обрабатываем какие-либо ошибки
-        std::cout << error.what() << "\n"; // Обязательно при выводе ошибок поставить символ переноса строки, иначе возможен вывод странных символов
-        return 2; // Код завершения программы при ошибке
+                         {
+                                 cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),                                                            // Объявляем флаг "--name" для команды printName
+                                 cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)                                                      // Объявляем флаг "--surname" для команды printName
+                         }, func3)                                                                                                                                      // Добавляем команду printName и указываем флаги name и surname
+           .command("printFlagsAndArguments", "Displays the passed flags and arguments", "$ printFlagsAndArguments file1.txt --dir value file2.txt\n>>> Flags:\n    flag -> value\n Arguments:\n    file1.txt\n    file2.txt",
+                         {
+                                 cli::Flag("dir", "d", "A flag that accepts a directory as input.", false, true),                                                       // Объявляем флаг "--dir" для команды printName
+                         }, func4, -1)                                                                                                                                  // Добавляем команду printFlagsAndArguments
+                .parse(argc, argv);                                                                                                                                     // Обязательно вызываем функцию parse c аргументами argc и argv
+    } catch (const std::invalid_argument &error) {                                                                                                                      // Обрабатываем какие-либо ошибки
+        std::cout << error.what() << "\n";                                                                                                                              // Обязательно при выводе ошибок поставить символ переноса строки, иначе возможен вывод странных символов
+        return 2;                                                                                                                                                       // код завершения программы при ошибке
     }
     return 0;
 }
 
-void func(cli::FlagsType &parsedFlags) { // Определение функции команды printHello
+
+void func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) { // Определение функции команды printArguments
+    std::cout << "Arguments: \n";
+    for (auto &arg : parsedArguments) {
+        std::cout << arg << "\n";
+    }
+}
+
+void func2(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) { // Определение функции команды printHello
     std::cout << "Hello!\n";
 }
 
-void func2(cli::FlagsType &parsedFlags) { // Определение функции команды printName
-    std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
+void func3(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) { // Определение функции команды printName
+    std::cout << "Hello "
+              << parsedFlags.at("name").value << " "
+              << parsedFlags.at("surname").value << "!\n";
 }
 
+void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) { // Определение функции команды printFlagsAndArguments
+    std::cout << "Flags: \n";
+    for (auto &flag : parsedFlags) {
+        std::cout << flag.first << " -> " << flag.second.value << "\n";
+    }
+    std::cout << "Arguments: \n";
+    for (auto &arg : parsedArguments) {
+        std::cout << arg << "\n";
+    }
+}
 ```
 
 ### Примеры запуска в терминале:
@@ -227,18 +259,49 @@ Hello Vanya Sidorov!
 
 ```
 $ ./cli help
-CLI version 0.2.0
+CLI version 0.2.1
 
 Usage:
    command [flags] [arguments]
 
 Commands:
-  help                               Displays background information and prompts all kinds of commands
-  printHello                         Displays the word "Hello!"
-  printName                          Displays "Hello [entered name]!"
+  help                               Show help 
+                                     informa-
+                                     tion. 
+  printArguments                     Displays 
+                                     the passed
+                                     arguments
+  printFlagsAndArguments             Displays 
+                                     the passed
+                                     flags and
+                                     arguments
     Flags:
-      -n, --name=VALUE[REQUIRED]     A flag that accepts a name as input
-      -s, --surname=VALUE[REQUIRED]  A flag that accepts a surname for entry
+      -d, --dir=VALUE                A flag  
+                                     that acc-
+                                     epts a 
+                                     directory
+                                     as input.
+  printHello                         Displays 
+                                     the word
+                                     "Hello!".
+  printName                          Displays 
+                                     "Hello 
+                                     [entered
+                                     name]!".
+    Flags:
+      -n, --name=VALUE[REQUIRED]     A flag  
+                                     that acc-
+                                     epts a 
+                                     name as 
+                                     input. 
+      -s, --surname=VALUE[REQUIRED]  A flag  
+                                     that acc-
+                                     epts a 
+                                     surname
+                                     for entry.
+  printTwoArguments                  Displays 
+                                     the passed
+                                     arguments
 ```
 
 ```
@@ -263,8 +326,29 @@ ERROR: Required flag not entered -> "--name" OR "-n"
 ```
 
 ```
-./cli printName -n --nocolor
+$ ./cli printName -n --nocolor
 ERROR: Flag "--name" must accept an argument
+```
+
+```
+$ ./cli --nocolor printArguments
+ERROR: Command "printArguments" must contain at least one argument
+```
+
+```
+$ ./cli --nocolor printTwoArguments a
+ERROR: Command "printTwoArguments" must contain 2 arguments
+```
+
+
+```
+$ ./cli printFlagsAndArguments file1.txt --dir directory/ file2.txt"
+Flags: 
+dir -> directory/
+Arguments: 
+file1.txt
+file2.txt
+
 ```
 
 [🔝Оглавление](#оглавление)

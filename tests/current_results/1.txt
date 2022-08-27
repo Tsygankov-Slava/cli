@@ -38,4 +38,7 @@ Commands:
                                      epts a 
                                      surname
                                      for entry.
+  printTwoArguments                  Displays 
+                                     the passed
+                                     arguments
 
