@@ -21,10 +21,6 @@ add_executable(cli src/main.cpp build/cli.hpp)
 configure_file(cli_config.h.in ../src/cli_config.h)
 
 #Test target
-#add_executable(
-#        test
-#        tests/test.cpp src/Cli/Cli.cpp src/Cli/Cli.hpp src/Flag/Flag.cpp src/Flag/Flag.hpp src/Command/Command.cpp src/Command/Command.hpp)
-
 add_executable(
        test
        tests/test.cpp build/cli.hpp)

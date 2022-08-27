@@ -1,28 +1,52 @@
 #include "gtest/gtest.h"
 #include <fstream>
 
-//#include "../src/Cli/Cli.hpp"
 #include "../build/cli.hpp"
 
 class CliFixture : public testing::Test {
 public:
     cli::Cli cli = cli::Cli();
 
-    static void func(cli::FlagsType &parsedFlags) {// Определение функции команды printHello
+    static void func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+        for (auto &arg : parsedArguments) {
+            std::cout << arg << "\n";
+        }
+    }
+
+    static void func2(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Hello!\n";
     }
 
-    static void func2(cli::FlagsType &parsedFlags) {// Определение функции команды printName
+    static void func3(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
+    }
+
+    static void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {           // Определение функции команды printArguments
+        std::cout << "Flags: \n";
+        for (auto &flag: parsedFlags) {
+            std::cout << flag.first << " -> " << flag.second.value << "\n";
+        }
+        std::cout << "Arguments: \n";
+        for (auto &arg : parsedArguments) {
+            std::cout << arg << "\n";
+        }
     }
 
     void SetUp() override {
         cli.setDescriptionMaxWidth(7);
-        cli.command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func)// Добавляем команду printHello
-                .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
-                         {cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
-                          cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)},
-                         func2);
+
+        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", {}, func, -1)
+           .command("printTwoArguments", "Displays the passed arguments", "", {}, func, 2)
+           .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func2)
+           .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
+                         {
+                            cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
+                            cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
+                         }, func3)
+           .command("printFlagsAndArguments", "Displays the passed flags and arguments","$ printFlagsAndArguments file1.txt --dir value file2.txt\n>>> Flags:\n    flag -> value\n Arguments:\n    file1.txt\n    file2.txt",
+            {
+                            cli::Flag("dir", "d", "A flag that accepts a directory as input.", false, true),
+                         }, func4, -1);
     }
 };
 
@@ -320,9 +344,70 @@ TEST_F(CliFixture, TestingErrorFlagDoesNotExist) {
             EXPECT_STREQ(R"(ERROR: Flag "--flag" doesn't exist)", e.what());
             throw;
         }
-    },
-                 std::invalid_argument);
+    },std::invalid_argument);
 
+    deleteArgv(argc, argv);
+}
+
+
+TEST_F(CliFixture, TestingErrorCommandMustContainAtLeastOneArgument) {
+    //Average
+    int argc = 3;
+    const std::string cmdArguments = "./cli --nocolor printArguments";
+    char **argv = initArgv(argc, cmdArguments);
+
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Command "printArguments" must contain at least one argument)", e.what());
+            throw;
+        }
+    },std::invalid_argument);
+
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingErrorCommandMustContainTwoArguments) {
+    //Average
+    int argc = 4;
+    const std::string cmdArguments = "./cli --nocolor printTwoArguments a";
+    char **argv = initArgv(argc, cmdArguments);
+
+    //Act && Assert
+    EXPECT_THROW({
+        try {
+            cli.parse(argc, argv);
+        } catch (const std::invalid_argument &e) {
+            EXPECT_STREQ(R"(ERROR: Command "printTwoArguments" must contain 2 arguments)", e.what());
+            throw;
+        }
+    },std::invalid_argument);
+
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingReadingArgumentsAndFlags) {
+    //Average
+    int argc = 6;
+    const std::string cmdArguments = "./cli printFlagsAndArguments file1.txt --dir directory/ file2.txt";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "5.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
     deleteArgv(argc, argv);
 }
 

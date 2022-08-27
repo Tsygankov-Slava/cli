@@ -4,20 +4,38 @@ Usage:
    command [flags] [arguments]
 
 Commands:
-  help                               Show help  
-                                     information.
-  printHello                         Displays the 
-                                     word "Hell-
-                                     o!". 
-  printName                          Displays "Hello 
-                                     [entered nam-
-                                     e]!". 
+  help                               Show help 
+                                     informa-
+                                     tion. 
+  printArguments                     Displays 
+                                     the passed
+                                     arguments
+  printFlagsAndArguments             Displays 
+                                     the passed
+                                     flags and
+                                     arguments
     Flags:
-      -n, --name=VALUE[REQUIRED]     A flag that 
-                                     accepts a 
-                                     name as input.
-      -s, --surname=VALUE[REQUIRED]  A flag that 
-                                     accepts a 
-                                     surname for
-                                     entry. 
+      -d, --dir=VALUE                A flag  
+                                     that acc-
+                                     epts a 
+                                     directory
+                                     as input.
+  printHello                         Displays 
+                                     the word
+                                     "Hello!".
+  printName                          Displays 
+                                     "Hello 
+                                     [entered
+                                     name]!".
+    Flags:
+      -n, --name=VALUE[REQUIRED]     A flag  
+                                     that acc-
+                                     epts a 
+                                     name as 
+                                     input. 
+      -s, --surname=VALUE[REQUIRED]  A flag  
+                                     that acc-
+                                     epts a 
+                                     surname
+                                     for entry.
 
