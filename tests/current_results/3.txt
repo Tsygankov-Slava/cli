@@ -2,17 +2,21 @@ Usage:
    command [flags] [arguments]
 
 Command:
-  printName                          Displays "Hello 
-                                     [entered nam-
-                                     e]!". 
+  printName                          Displays 
+                                     "Hello 
+                                     [entered
+                                     name]!".
 	Flags:
-      -n, --name=VALUE[REQUIRED]     A flag that 
-                                     accepts a 
-                                     name as input.
-      -s, --surname=VALUE[REQUIRED]  A flag that 
-                                     accepts a 
-                                     surname for
-                                     entry. 
+      -n, --name=VALUE[REQUIRED]     A flag  
+                                     that acc-
+                                     epts a 
+                                     name as 
+                                     input. 
+      -s, --surname=VALUE[REQUIRED]  A flag  
+                                     that acc-
+                                     epts a 
+                                     surname
+                                     for entry.
 	Example:
       $ printName -n Name
       >>> Hello Name!
