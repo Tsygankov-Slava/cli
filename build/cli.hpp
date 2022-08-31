@@ -47,6 +47,23 @@ namespace cli {
         bool canContainEmptyArgumentList;
 
     public:
+        //cli.command("Name", "Description", "Example", action, argumentsCount, canContainEmptyArgumentList)
+        Command(std::string name, std::string description, std::string example, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
+                : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {};
+
+        //cli.command("Name", "Description", {Flags}, action, argumentsCount, canContainEmptyArgumentList)
+        Command(std::string name, std::string description, const std::vector<Flag> &flags, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
+            : name(std::move(name)), description(std::move(description)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {
+            for (auto &flag : flags) {
+                this->flags.insert(std::make_pair(flag.name, flag));
+            }
+        };
+
+        //cli.command("Name", "Description", action, argumentsCount, canContainEmptyArgumentList)
+        Command(std::string name, std::string description, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
+            : name(std::move(name)), description(std::move(description)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {};
+
+        // cli.command("Name", "Description", "Example", {Flags}, action, argumentsCount, canContainEmptyArgumentList)
         Command(std::string name, std::string description, std::string example, const std::vector<Flag> &flags, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
             : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {
             for (auto &flag : flags) {
@@ -69,6 +86,9 @@ namespace cli {
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
 
+        Cli &command(const std::string &name, const std::string &description, const std::string &example, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
+        Cli &command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
+        Cli &command(const std::string &name, const std::string &description, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
         Cli &setDescriptionMaxWidth(int value = 50);
 
@@ -92,6 +112,24 @@ namespace cli {
                                                                                   }))};
     };
 }// namespace cli
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, example, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
 cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
     Command cmd = Command(name, description, example, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));

@@ -1,5 +1,23 @@
 #include "Cli.hpp"
 
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, example, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, action, argumentsCount, canContainEmptyArgumentList);
+    commands.insert(std::make_pair(name, cmd));
+    return *this;
+}
+
 cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
     Command cmd = Command(name, description, example, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
