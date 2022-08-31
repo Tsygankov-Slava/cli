@@ -35,10 +35,10 @@ public:
     void SetUp() override {
         cli.setDescriptionMaxWidth(7);
 
-        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", {}, func, -1)
-           .command("printTwoArguments", "Displays the passed arguments", "", {}, func, 2)
-           .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func2)
-           .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
+        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n file2.txt", func, -1)
+           .command("printTwoArguments", "Displays the passed arguments", func, 2)
+           .command("printHello", "Displays the word \"Hello!\".", func2)
+           .command("printName", "Displays \"Hello [entered name]!\".",
                          {
                             cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
                             cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
@@ -287,7 +287,7 @@ TEST_F(CliFixture, TestingPrintCmdHelpFunction_ManyCommands) {
 TEST_F(CliFixture, TestingPrintCmdHelpFunction_OneCommand) {
     //Average
     int argc = 4;
-    const std::string cmdArguments = "./cli --nocolor help printName";
+    const std::string cmdArguments = "./cli --nocolor help printFlagsAndArguments";
     char **argv = initArgv(argc, cmdArguments);
     const std::string fileName = "3.txt";
 

@@ -118,11 +118,24 @@ auto cli = cli::Cli();
 > ❗ При использовании этого метода стоит обращать внимание, что существует реализация переноса слов.  
 > Перенос работает по правилу "не оставлять меньше 3 символов до/после дефиса".
 
-2. Чтобы описать `команду` нужно использовать следующий синтаксис: 
+2. Чтобы описать `команду` можно использовать один из вариантов ниже: 
 
 ```c++
 command(name, description, example, {flags}, action, argumentsCount = 0, canContainEmptyArgumentList = false);
 ```
+
+```c++
+command(name, description, example, action, argumentsCount = 0, canContainEmptyArgumentList = false);
+```
+
+```c++
+command(name, description, {flags}, action, argumentsCount = 0, canContainEmptyArgumentList = false);
+```
+
+```c++
+command(name, description, action, argumentsCount = 0, canContainEmptyArgumentList = false);
+```
+
 | Поле                          | Тип               | Описание                                                                                                    |
 |-------------------------------|-------------------|-------------------------------------------------------------------------------------------------------------|
 | `name`                        | `string`          | имя команды                                                                                                 |
@@ -196,9 +209,9 @@ int main(int argc, char **argv) {
     cli.setDescriptionMaxWidth(7); // Задаём ширину описания
 
     try {
-        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", {}, func, -1) // Добавляем команду printArguments
-           .command("printTwoArguments", "Displays the passed arguments", "", {}, func, 2)                                                                              // Добавляем команду printTwoArguments
-           .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", {}, func2)                                                              // Добавляем команду printHello
+        cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", func, -1)     // Добавляем команду printArguments
+           .command("printTwoArguments", "Displays the passed arguments", func, 2)                                                                                      // Добавляем команду printTwoArguments
+           .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", func2)                                                                  // Добавляем команду printHello
            .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
                          {
                                  cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),                                                            // Объявляем флаг "--name" для команды printName

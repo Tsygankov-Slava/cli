@@ -17,6 +17,9 @@ namespace cli {
                 {"blue", "\x1B[34m"},
                 {"white", "\x1B[37m"}};
 
+        Cli &command(const std::string &name, const std::string &description, const std::string &example, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
+        Cli &command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
+        Cli &command(const std::string &name, const std::string &description, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
         Cli &setDescriptionMaxWidth(int value = 50);
 

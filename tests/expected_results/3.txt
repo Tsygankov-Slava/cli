@@ -2,22 +2,21 @@ Usage:
    command [flags] [arguments]
 
 Command:
-  printName                          Displays
-                                     "Hello
-                                     [entered
-                                     name]!".
+  printFlagsAndArguments  Displays
+                          the passed
+                          flags and
+                          arguments
 	Flags:
-      -n, --name=VALUE[REQUIRED]     A flag
-                                     that acc-
-                                     epts a
-                                     name as
-                                     input.
-      -s, --surname=VALUE[REQUIRED]  A flag
-                                     that acc-
-                                     epts a
-                                     surname
-                                     for entry.
+      -d, --dir=VALUE     A flag
+                          that acc-
+                          epts a
+                          directory
+                          as input.
 	Example:
-      $ printName -n Name
-      >>> Hello Name!
+      $ printFlagsAndArguments file1.txt --dir value file2.txt
+      >>> Flags:
+          flag -> value
+       Arguments:
+          file1.txt
+          file2.txt
 
