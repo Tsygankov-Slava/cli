@@ -1,25 +1,25 @@
 #include "Cli.hpp"
 
-cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
-    Command cmd = Command(name, description, example, action, argumentsCount, canContainEmptyArgumentList);
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const cli::CommandCallback &action, const std::string &argumentsTypeDeclaration, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, example, action, argumentsTypeDeclaration, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
     return *this;
 }
 
-cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
-    Command cmd = Command(name, description, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const cli::CommandCallback &action, const std::string &argumentsTypeDeclaration, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, commandFlag, action, argumentsTypeDeclaration, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
     return *this;
 }
 
-cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
-    Command cmd = Command(name, description, action, argumentsCount, canContainEmptyArgumentList);
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const cli::CommandCallback &action, const std::string &argumentsTypeDeclaration, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, action, argumentsTypeDeclaration, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
     return *this;
 }
 
-cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
-    Command cmd = Command(name, description, example, commandFlag, action, argumentsCount, canContainEmptyArgumentList);
+cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const std::vector<Flag> &commandFlag, const CommandCallback &action, const std::string &argumentsTypeDeclaration, bool canContainEmptyArgumentList) {
+    Command cmd = Command(name, description, example, commandFlag, action, argumentsTypeDeclaration, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
     return *this;
 }
@@ -65,22 +65,78 @@ void cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **argv) {
     }
 }
 
+std::pair<std::string, std::string> cli::Cli::getTypeAndCountArguments(std::string &cmd) {
+    std::string argumentsTypeDeclaration = commands.at(cmd).argumentsTypeDeclaration;
+    auto pos1 = argumentsTypeDeclaration.find('[');
+    auto pos2 = argumentsTypeDeclaration.find(']');
+
+    std::string argumentsType = argumentsTypeDeclaration;
+    std::string argumentsCount = "-1";
+
+    auto argumentsSize = argumentsTypeDeclaration.size();
+    if (!(pos1 > argumentsSize && pos2 > argumentsSize)) {
+        argumentsType = argumentsTypeDeclaration.substr(0, argumentsSize - (pos2 - pos1) - 1);
+        argumentsCount = argumentsTypeDeclaration.substr(pos1 + 1, pos2 - pos1 - 1);
+    }
+
+    return std::make_pair(argumentsType, argumentsCount);
+}
+
+bool cli::Cli::isNumber(const std::string &number) {
+    bool sign = false;
+    for (const char &symbol : number) {
+        if (!(std::isdigit(symbol))) {
+            if ((symbol == '-' || symbol == '+') && !sign) {
+                sign = true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::string cli::Cli::checkCorrectType(std::string &type, std::string &countString, int &count) {
+    auto it = std::find(argumentsAndFlagsType.begin(), argumentsAndFlagsType.end(), type);
+    std::string message;
+    if (it == argumentsAndFlagsType.end()) {
+        message = paint(R"(ERROR: Arguments type incorrect -> )" + type, "red", *this);
+    } else {
+        if (!isNumber(countString)) {
+            message = paint(R"(ERROR: Arguments count incorrect -> )" + countString, "red", *this);
+        } else {
+            count = std::stoi(countString);
+            if (count < -1) {
+                message = paint(R"(ERROR: Arguments count incorrect -> )" + countString, "red", *this);
+            }
+        }
+    }
+    return message;
+}
+
 std::string cli::Cli::checkNumberOfArgumentsPassed(std::string &cmd, cli::ArgumentsType &parsedArguments) {
-    auto sizeCmdArguments = commands.at(cmd).argumentsCount;
+    std::string argumentsType, argumentsCountString;
+    int argumentsCount;
+    std::tie(argumentsType, argumentsCountString) = getTypeAndCountArguments(cmd);
+    std::string message = checkCorrectType(argumentsType, argumentsCountString, argumentsCount);
+    if (!message.empty()) {
+        return message;
+    }
+    commands.at(cmd).argumentsType = argumentsType;
     auto countParsedArguments = parsedArguments.size();
 
-    if (sizeCmdArguments == -1) {
+    if (argumentsCount == -1) {
         if (!commands.at(cmd).canContainEmptyArgumentList && countParsedArguments == 0) {
             return paint(R"(ERROR: Command ")" + cmd + R"(" must contain at least one argument)", "red", *this);
         }
-    } else if (sizeCmdArguments != countParsedArguments) {
-        std::string argWord = (sizeCmdArguments > 1) ? "arguments" : "argument";
-        return paint(R"(ERROR: Command ")" + cmd + R"(" must contain )" + std::to_string(sizeCmdArguments) + ' ' + argWord, "red", *this);
+    } else if (argumentsCount != countParsedArguments) {
+        std::string argWord = (argumentsCount > 1) ? "arguments" : "argument";
+        return paint(R"(ERROR: Command ")" + cmd + R"(" must contain )" + std::to_string(argumentsCount) + ' ' + argWord, "red", *this);
     }
     return "";
 }
 
-void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char** argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments) {
+void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char **argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments) {
     while (++i < argc) {
         std::string lexeme = argv[i];
         if (lexeme[0] == '-') {
@@ -114,6 +170,40 @@ void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char** argv, i
     }
 }
 
+std::string cli::Cli::convertArgumentsToString(cli::ArgumentsType &parsedArguments, std::vector<std::string> &convertedParsedArguments, const std::string &cmd) {
+    for (auto &argument : parsedArguments) {
+        convertedParsedArguments.push_back(argument);
+    }
+    return "";
+}
+
+std::string cli::Cli::convertArgumentsToInt(cli::ArgumentsType &parsedArguments, std::vector<int> &convertedParsedArguments, const std::string &cmd) {
+    std::string message;
+    for (auto &argument : parsedArguments) {
+        if (isNumber(argument)) {
+            convertedParsedArguments.push_back(std::stoi(argument));
+        } else {
+            message = R"(ERROR: Command ")" + cmd + R"(" Arguments must be int type)";
+        }
+    }
+    return message;
+}
+
+std::string cli::Cli::convertArgumentsToBool(cli::ArgumentsType &parsedArguments, std::vector<bool> &convertedParsedArguments, const std::string &cmd) {
+    std::string message;
+    for (auto &argument : parsedArguments) {
+        if (argument == "1" || argument == "true") {
+            convertedParsedArguments.push_back(true);
+        } else if (argument == "0" || argument == "false") {
+            convertedParsedArguments.push_back(false);
+        } else {
+            message = R"(ERROR: Command ")" + cmd + R"(" Arguments must be bool type)";
+        }
+    }
+    return message;
+}
+
+
 void cli::Cli::parse(int &argc, char **argv) {
     std::string cmd;
     checkNocolor(*this, argc, argv);
@@ -135,11 +225,23 @@ void cli::Cli::parse(int &argc, char **argv) {
                 printCmdHelp(enteredCommands, commands, *this);
                 break;
             }
-            auto commandFlags = commands.at(cmd).flags;
+            auto command = commands.at(cmd);
+            auto commandFlags = command.flags;
             ArgumentsType parsedArguments;
             FlagsType parsedFlags;
             parseFlagsAndArguments(cmd, argc, argv, i, commandFlags, parsedFlags, parsedArguments);
-            auto action = commands.at(cmd).action;
+            auto argumentsType = command.argumentsType;
+            if (argumentsType == "String" || argumentsType == "string") {
+                std::vector<std::string> convertedParsedArguments;
+                convertArgumentsToString(parsedArguments, convertedParsedArguments, cmd);
+            } else if (argumentsType == "Int" || argumentsType == "int") {
+                std::vector<int> convertedParsedArguments;
+                convertArgumentsToInt(parsedArguments, convertedParsedArguments, cmd);
+            } else if (argumentsType == "Bool" || argumentsType == "bool") {
+                std::vector<bool> convertedParsedArguments;
+                convertArgumentsToBool(parsedArguments, convertedParsedArguments, cmd);
+            }
+            auto action = command.action;
             if (action) {
                 action(parsedFlags, parsedArguments);
             }
