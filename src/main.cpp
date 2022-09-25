@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
 
     try {
         cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n    file2.txt", func, -1)     // Добавляем команду printArguments
-                .command("printTwoArguments", "Displays the passed arguments", func, 2)                                                                                      // Добавляем команду printTwoArguments
-                .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", func2)                                                                  // Добавляем команду printHello
+                .command("printTwoArguments", "Displays the passed arguments", func, 2)                                                                                 // Добавляем команду printTwoArguments
+                .command("printHello", "Displays the word \"Hello!\".", "$ printHello \n>>> Hello!", func2)                                                             // Добавляем команду printHello
                 .command("printName", "Displays \"Hello [entered name]!\".", "$ printName -n Name\n>>> Hello Name!",
                          {
                                  cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),              // Объявляем флаг "--name" для команды printName
@@ -27,10 +27,10 @@ int main(int argc, char **argv) {
                          {
                                  cli::Flag("dir", "d", "A flag that accepts a directory as input.", false, true),         // Объявляем флаг "--dir" для команды printName
                          }, func4, -1)                                                                                                                                  // Добавляем команду printFlagsAndArguments
-                .command("printStringArguments", "Displays the passed string arguments", func5, -1)                                                                          // Добавляем команду printStringArguments
-                .command("printIntArguments", "Displays the passed int arguments", func6, -1)                                                                                // Добавляем команду printIntArguments
-                .command("printBoolArguments", "Displays the passed bool arguments", func7, -1)                                        // Добавляем команду printBoolArguments
-                .parse(argc, argv);                                                                                                                                       // Обязательно вызываем функцию parse c аргументами argc и argv
+                .command("printStringArguments", "Displays the passed string arguments", func5, -1)                                                                     // Добавляем команду printStringArguments
+                .command("printIntArguments", "Displays the passed int arguments", func6, -1)                                                                           // Добавляем команду printIntArguments
+                .command("printBoolArguments", "Displays the passed bool arguments", func7, -1)                                   // Добавляем команду printBoolArguments
+                .parse(argc, argv);                                                                                                                                  // Обязательно вызываем функцию parse c аргументами argc и argv
     } catch (const std::invalid_argument &error) {                                                                                                                      // Обрабатываем какие-либо ошибки
         std::cout << error.what() << "\n";                                                                                                                              // Обязательно при выводе ошибок поставить символ переноса строки, иначе возможен вывод странных символов
         return 2;                                                                                                                                                       // код завершения программы при ошибке
