@@ -1,0 +1,2 @@
+ERROR: Command arguments must be int type 
+::Wrong argument -> "file1.txt" | "file2.txt"

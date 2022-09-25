@@ -10,6 +10,10 @@ Commands:
   printArguments                     Displays 
                                      the passed
                                      arguments
+  printBoolArguments                 Displays 
+                                     the passed
+                                     bool arg-
+                                     uments 
   printFlagsAndArguments             Displays 
                                      the passed
                                      flags and
@@ -23,6 +27,10 @@ Commands:
   printHello                         Displays 
                                      the word
                                      "Hello!".
+  printIntArguments                  Displays 
+                                     the passed
+                                     int arg-
+                                     uments 
   printName                          Displays 
                                      "Hello 
                                      [entered
@@ -38,6 +46,10 @@ Commands:
                                      epts a 
                                      surname
                                      for entry.
+  printStringArguments               Displays 
+                                     the passed
+                                     string 
+                                     arguments
   printTwoArguments                  Displays 
                                      the passed
                                      arguments

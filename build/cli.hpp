@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <iomanip>
+#include <type_traits>
 #include <vector>
 
 #define CLI_VERSION_MAJOR "0"
@@ -49,7 +50,7 @@ namespace cli {
     public:
         //cli.command("Name", "Description", "Example", action, argumentsCount, canContainEmptyArgumentList)
         Command(std::string name, std::string description, std::string example, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
-                : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {};
+            : name(std::move(name)), description(std::move(description)), example(std::move(example)), action(std::move(action)), argumentsCount(argumentsCount), canContainEmptyArgumentList(canContainEmptyArgumentList) {};
 
         //cli.command("Name", "Description", {Flags}, action, argumentsCount, canContainEmptyArgumentList)
         Command(std::string name, std::string description, const std::vector<Flag> &flags, CommandCallback action, int argumentsCount = 0, bool canContainEmptyArgumentList = false)
@@ -76,15 +77,11 @@ namespace cli {
 
 
 namespace cli {
+    extern bool nocolor;
+    extern std::map<std::string, std::string> colors;
+
     class Cli {
     public:
-        bool nocolor = false;
-        std::map<std::string, std::string> colors{
-                {"red", "\x1B[31m"},
-                {"green", "\x1B[32m"},
-                {"yellow", "\x1B[33m"},
-                {"blue", "\x1B[34m"},
-                {"white", "\x1B[37m"}};
 
         Cli &command(const std::string &name, const std::string &description, const std::string &example, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
         Cli &command(const std::string &name, const std::string &description, const std::vector<Flag> &commandFlag, const CommandCallback &action, int argumentsCount = 0, bool canContainEmptyArgumentList = false);
@@ -99,19 +96,85 @@ namespace cli {
         static std::string flagInCommand(std::map<std::string, Flag> &commandFlags, std::string &inputFlagName);
         static std::map<std::string, int> getCmdSizes(std::map<std::string, Command> &commands);
         static void checkNocolor(cli::Cli &cli, int &argc, char **argv);
-        static std::string paint(const std::string &str, const std::string &color, cli::Cli &cli);
+        static std::string paint(const std::string &str, const std::string &color);
         static void lineWrapping(std::string &description, int maxSize, int flagSize, cli::Cli &cli);
-        void parseFlagsAndArguments(std::string &cmd, int argc, char** argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments);
+        void parseFlagsAndArguments(std::string &cmd, int argc, char **argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments);
         std::string checkNumberOfArgumentsPassed(std::string &cmd, ArgumentsType &parsedArguments);
+
+        template<typename T>
+        static std::vector<T> convertArgumentsToType(ArgumentsType &parsedArguments) {
+            std::vector<T> convertArguments;
+            std::string message = cli::Cli::convert<T>(parsedArguments, convertArguments);
+            if (!message.empty()) {
+                throw std::invalid_argument(message);
+            }
+            return convertArguments;
+        }
 
     private:
         int descriptionMaxWidth = 50;
-        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Show help information.", "", {},
+        std::map<std::string, Command> commands = {std::make_pair("help", Command("help", "Show help information.",
                                                                                   [this](FlagsType &parsedFlags, ArgumentsType &parsedArguments) {
                                                                                       printAllHelp(this->commands, *this);
                                                                                   }))};
+
+        static bool isNumber(const std::string &number);
+
+        template<typename T>
+        static typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type convert(ArgumentsType &parsedArguments, std::vector<T> &convertedParsedArguments) {
+            for (auto &argument : parsedArguments) {
+                convertedParsedArguments.push_back(argument);
+            }
+            return "";
+        }
+
+        template<typename T>
+        static typename std::enable_if<std::is_same<T, int>::value, std::string>::type convert(ArgumentsType &parsedArguments, std::vector<T> &convertedParsedArguments) {
+            std::string wrongArguments, message;
+            for (auto &argument : parsedArguments) {
+                if (isNumber(argument)) {
+                    convertedParsedArguments.push_back(std::stoi(argument));
+                } else {
+                    wrongArguments += "\"" + argument + "\" | ";
+                }
+            }
+            if (!wrongArguments.empty()) {
+                wrongArguments = wrongArguments.substr(0, wrongArguments.size() - 3);
+                message = paint("ERROR: Command arguments must be int type \n::Wrong argument -> " + wrongArguments, "red");
+            }
+            return message;
+        }
+
+        template<typename T>
+        static typename std::enable_if<std::is_same<T, bool>::value, std::string>::type convert(ArgumentsType &parsedArguments, std::vector<T> &convertedParsedArguments) {
+            std::string wrongArguments, message;
+            for (auto &argument : parsedArguments) {
+                if (argument == "1" || argument == "true") {
+                    convertedParsedArguments.push_back(true);
+                } else if (argument == "0" || argument == "false") {
+                    convertedParsedArguments.push_back(false);
+                } else {
+                    wrongArguments += "\"" + argument + "\" | ";
+                }
+            }
+            if (!wrongArguments.empty()) {
+                wrongArguments = wrongArguments.substr(0, wrongArguments.size() - 3);
+                message = paint("ERROR: Command arguments must be bool type \n::Wrong argument -> " + wrongArguments, "red");
+            }
+            return message;
+        }
     };
 }// namespace cli
+namespace cli {
+    bool nocolor = false;
+    std::map<std::string, std::string> colors{
+            {"red", "\x1B[31m"},
+            {"green", "\x1B[32m"},
+            {"yellow", "\x1B[33m"},
+            {"blue", "\x1B[34m"},
+            {"white", "\x1B[37m"}};
+}
+
 cli::Cli &cli::Cli::command(const std::string &name, const std::string &description, const std::string &example, const cli::CommandCallback &action, int argumentsCount, bool canContainEmptyArgumentList) {
     Command cmd = Command(name, description, example, action, argumentsCount, canContainEmptyArgumentList);
     commands.insert(std::make_pair(name, cmd));
@@ -146,7 +209,7 @@ std::string cli::Cli::checkIsRequiredFlag(std::map<std::string, Flag> &inputFlag
         auto flag = commandFlag.second;
         if (flag.isRequired) {
             if (!(inputFlags.count(flag.name) || inputFlags.count(flag.shortName))) {
-                return paint(R"(ERROR: Required flag not entered -> "--)" + flag.name + R"(" OR "-)" + flag.shortName + R"(")", "red", cli);
+                return paint(R"(ERROR: Required flag not entered -> "--)" + flag.name + R"(" OR "-)" + flag.shortName + R"(")", "red");
             }
         }
     }
@@ -168,7 +231,7 @@ void cli::Cli::checkNocolor(cli::Cli &cli, int &argc, char **argv) {
     for (int i = 1; i < argc; ++i) {
         cmd = argv[i];
         if (cmd == "--nocolor") {
-            cli.nocolor = true;
+            cli::nocolor = true;
             --argc;
             for (int j = i; j < argc; ++j) {
                 argv[j] = argv[j + 1];
@@ -183,29 +246,33 @@ std::string cli::Cli::checkNumberOfArgumentsPassed(std::string &cmd, cli::Argume
 
     if (sizeCmdArguments == -1) {
         if (!commands.at(cmd).canContainEmptyArgumentList && countParsedArguments == 0) {
-            return paint(R"(ERROR: Command ")" + cmd + R"(" must contain at least one argument)", "red", *this);
+            return paint(R"(ERROR: Command ")" + cmd + R"(" must contain at least one argument)", "red");
         }
     } else if (sizeCmdArguments != countParsedArguments) {
         std::string argWord = (sizeCmdArguments > 1) ? "arguments" : "argument";
-        return paint(R"(ERROR: Command ")" + cmd + R"(" must contain )" + std::to_string(sizeCmdArguments) + ' ' + argWord, "red", *this);
+        return paint(R"(ERROR: Command ")" + cmd + R"(" must contain )" + std::to_string(sizeCmdArguments) + ' ' + argWord, "red");
     }
     return "";
 }
 
-void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char** argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments) {
+void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char **argv, int &i, FlagsType &commandFlags, FlagsType &parsedFlags, ArgumentsType &parsedArguments) {
     while (++i < argc) {
         std::string lexeme = argv[i];
-        if (lexeme[0] == '-') {
+        std::string number = lexeme;
+        if (number.find('-')) {
+            number.erase(std::remove(number.begin(), number.begin() + 1, '-'), number.begin() + 1);
+        }
+        if (lexeme[0] == '-' && !isNumber(number)) {
             std::string flag = lexeme;
             lexeme.erase(std::remove(lexeme.begin(), lexeme.begin() + 2, '-'), lexeme.begin() + 2);
             if ((lexeme = flagInCommand(commandFlags, lexeme)).empty()) {
-                throw std::invalid_argument(paint(R"(ERROR: An unknown flag has been entered for the command ")" + cmd + R"(" -> ")" + flag + R"(")", "red", *this));
+                throw std::invalid_argument(paint(R"(ERROR: An unknown flag has been entered for the command ")" + cmd + R"(" -> ")" + flag + R"(")", "red"));
             }
             auto commandFlag = commandFlags.at(lexeme);
             if (commandFlag.withValue) {
                 ++i;
                 if (i == argc) {
-                    throw std::invalid_argument(paint(R"(ERROR: Flag "--)" + lexeme + R"(" must accept an argument)", "red", *this));
+                    throw std::invalid_argument(paint(R"(ERROR: Flag "--)" + lexeme + R"(" must accept an argument)", "red"));
                 }
                 commandFlag.value = argv[i];
             }
@@ -226,6 +293,20 @@ void cli::Cli::parseFlagsAndArguments(std::string &cmd, int argc, char** argv, i
     }
 }
 
+bool cli::Cli::isNumber(const std::string &number) {
+    bool sign = false;
+    for (const char &symbol : number) {
+        if (!(std::isdigit(symbol))) {
+            if ((symbol == '-' || symbol == '+') && !sign) {
+                sign = true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void cli::Cli::parse(int &argc, char **argv) {
     std::string cmd;
     checkNocolor(*this, argc, argv);
@@ -238,9 +319,9 @@ void cli::Cli::parse(int &argc, char **argv) {
                     cmd = argv[j];
                     if (!commands.count(cmd)) {
                         if (cmd[0] == '-') {
-                            throw std::invalid_argument(paint(R"(ERROR: Flag ")" + cmd + R"(" doesn't exist)", "red", *this));
+                            throw std::invalid_argument(paint(R"(ERROR: Flag ")" + cmd + R"(" doesn't exist)", "red"));
                         }
-                        throw std::invalid_argument(paint(R"(ERROR: Command ")" + cmd + R"(" doesn't exist)", "red", *this));
+                        throw std::invalid_argument(paint(R"(ERROR: Command ")" + cmd + R"(" doesn't exist)", "red"));
                     }
                     enteredCommands.push_back(cmd);
                 }
@@ -257,9 +338,9 @@ void cli::Cli::parse(int &argc, char **argv) {
             }
         } else {
             if (cmd[0] == '-') {
-                throw std::invalid_argument(paint(R"(ERROR: Unknown flag -> ")" + cmd + R"(")", "red", *this));
+                throw std::invalid_argument(paint(R"(ERROR: Unknown flag -> ")" + cmd + R"(")", "red"));
             } else {
-                throw std::invalid_argument(paint(R"(ERROR: Unknown command -> ")" + cmd + R"(")", "red", *this));
+                throw std::invalid_argument(paint(R"(ERROR: Unknown command -> ")" + cmd + R"(")", "red"));
             }
         }
     }
@@ -310,7 +391,7 @@ void cli::Cli::lineWrapping(std::string &description, const int maxSize, int siz
             descriptionString += ' ';
             const unsigned spacePosition = descriptionString.find_first_of(' ', 0);
             const std::string firstWorld = descriptionString.substr(0, spacePosition);
-            descriptionString = paint(firstWorld, "blue", cli) + descriptionString.substr(spacePosition, descriptionString.size());
+            descriptionString = paint(firstWorld, "blue") + descriptionString.substr(spacePosition, descriptionString.size());
         }
         if (!descriptionString.empty()) {
             std::cout << std::setw(maxSize - size + 2) << "";
@@ -325,8 +406,8 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
     std::string minor = CLI_VERSION_MINOR;
     std::string patch = CLI_VERSION_PATCH;
 
-    std::cout << paint("CLI", "green", cli) + paint(" version ", "white", cli) + paint(major + "." + minor + '.' + patch, "yellow", cli) << "\n\n";
-    std::cout << paint("Usage:\n", "yellow", cli) << paint("   command [flags] [arguments]\n\n", "white", cli) << paint("Commands:\n", "yellow", cli);
+    std::cout << paint("CLI", "green") + paint(" version ", "white") + paint(major + "." + minor + '.' + patch, "yellow") << "\n\n";
+    std::cout << paint("Usage:\n", "yellow") << paint("   command [flags] [arguments]\n\n", "white") << paint("Commands:\n", "yellow");
     std::map<std::string, int> sizes = getCmdSizes(commands);
     const int maxSize = std::max_element(sizes.begin(), sizes.end(), [](const auto &x, const auto &y) {
                             return x.second < y.second;
@@ -339,9 +420,9 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
         const unsigned spacePositionCmd = cmdDescription.find_first_of(' ', 0);
         const std::string firstWorldCmd = cmdDescription.substr(0, spacePositionCmd);
 
-        std::cout << paint(str, "green", cli);
+        std::cout << paint(str, "green");
         if (cmdDescription.size() < cli.descriptionMaxWidth) {
-            cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
+            cmdDescription = paint(firstWorldCmd, "blue") + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - cmdSize + 2) << "";
             std::cout << cmdDescription << "\n";
         } else {
@@ -349,7 +430,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
         }
         auto commandFlags = cmd.second.flags;
         if (!commandFlags.empty()) {
-            std::cout << paint("    Flags:\n", "yellow", cli);
+            std::cout << paint("    Flags:\n", "yellow");
         }
         for (auto &flag : commandFlags) {
             str = "      -" + flag.second.shortName + ", --" + flag.first;
@@ -357,7 +438,7 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
                 str += "=VALUE";
             }
             if (flag.second.isRequired) {
-                str += paint("[", "green", cli) + paint("REQUIRED", "red", cli) + paint("]", "green", cli);
+                str += paint("[", "green") + paint("REQUIRED", "red") + paint("]", "green");
             }
 
             int flagSize = sizes[flag.first];
@@ -365,9 +446,9 @@ void cli::Cli::printAllHelp(std::map<std::string, Command> &commands, cli::Cli &
             const unsigned spacePositionFlag = flagDescription.find_first_of(' ', 0);
             const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
 
-            std::cout << paint(str, "green", cli);
+            std::cout << paint(str, "green");
             if (flagDescription.size() < cli.descriptionMaxWidth) {
-                flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
+                flagDescription = paint(firstWorldFlag, "blue") + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - flagSize + 2) << "";
                 std::cout << flagDescription << "\n";
             } else {
@@ -395,11 +476,11 @@ std::map<std::string, int> cli::Cli::getCmdSizes(std::map<std::string, Command> 
     return actualSize;
 }
 void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std::string, Command> &commands, cli::Cli &cli) {
-    std::cout << paint("Usage:\n", "yellow", cli) << paint("   command [flags] [arguments]\n\n", "white", cli);
+    std::cout << paint("Usage:\n", "yellow") << paint("   command [flags] [arguments]\n\n", "white");
     if (commandsName.size() > 1) {
-        std::cout << paint("Commands:\n", "yellow", cli);
+        std::cout << paint("Commands:\n", "yellow");
     } else {
-        std::cout << paint("Command:\n", "yellow", cli);
+        std::cout << paint("Command:\n", "yellow");
     }
     std::map<std::string, Command> commandsMap;
     for (auto &cmdName : commandsName) {
@@ -418,9 +499,9 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
 
         std::string str = "  " + cmd.name;
 
-        std::cout << paint(str, "green", cli);
+        std::cout << paint(str, "green");
         if (cmdDescription.size() < cli.descriptionMaxWidth) {
-            cmdDescription = paint(firstWorldCmd, "blue", cli) + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
+            cmdDescription = paint(firstWorldCmd, "blue") + cmdDescription.substr(spacePositionCmd, cmdDescription.size());
             std::cout << std::setw(maxSize - sizes[cmdName] + 2) << "";
             std::cout << cmdDescription << "\n";
         } else {
@@ -429,7 +510,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
 
         auto commandFlags = cmd.flags;
         if (!commandFlags.empty()) {
-            std::cout << paint("\tFlags:\n", "yellow", cli);
+            std::cout << paint("\tFlags:\n", "yellow");
         }
         for (auto &flag : commandFlags) {
             str = "      -" + flag.second.shortName + ", --" + flag.first;
@@ -437,7 +518,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
                 str += "=VALUE";
             }
             if (flag.second.isRequired) {
-                str += paint("[", "green", cli) + paint("REQUIRED", "red", cli) + paint("]", "green", cli);
+                str += paint("[", "green") + paint("REQUIRED", "red") + paint("]", "green");
             }
 
             int flagSize = sizes[flag.first];
@@ -446,9 +527,9 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
             const std::string firstWorldFlag = flagDescription.substr(0, spacePositionFlag);
 
 
-            std::cout << paint(str, "green", cli);
+            std::cout << paint(str, "green");
             if (flagDescription.size() < cli.descriptionMaxWidth) {
-                flagDescription = paint(firstWorldFlag, "blue", cli) + flagDescription.substr(spacePositionFlag, flagDescription.size());
+                flagDescription = paint(firstWorldFlag, "blue") + flagDescription.substr(spacePositionFlag, flagDescription.size());
                 std::cout << std::setw(maxSize - sizes[flag.first] + 2) << " ";
                 std::cout << flagDescription << "\n";
             } else {
@@ -456,7 +537,7 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
             }
         }
         if (!cmd.example.empty()) {
-            std::cout << paint("\tExample:", "yellow", cli) << paint("\n      ", "white", cli);
+            std::cout << paint("\tExample:", "yellow") << paint("\n      ", "white");
             for (auto &symbol : cmd.example) {
                 std::cout << symbol;
                 if (symbol == '\n') {
@@ -467,9 +548,9 @@ void cli::Cli::printCmdHelp(std::vector<std::string> &commandsName, std::map<std
         }
     }
 }
-std::string cli::Cli::paint(const std::string &str, const std::string &color, cli::Cli &cli) {
-    if (!cli.nocolor) {
-        return cli.colors[color] + str + cli.colors["white"];
+std::string cli::Cli::paint(const std::string &str, const std::string &color) {
+    if (!cli::nocolor) {
+        return cli::colors[color] + str + cli::colors["white"];
     }
     return str;
 }

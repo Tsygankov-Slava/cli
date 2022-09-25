@@ -1,0 +1,2 @@
+ERROR: Command arguments must be bool type 
+::Wrong argument -> "a" | "4"

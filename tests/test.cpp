@@ -7,46 +7,95 @@ class CliFixture : public testing::Test {
 public:
     cli::Cli cli = cli::Cli();
 
-    static void func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+    static int func(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+        std::vector<std::string> arguments = cli::Cli::convertArgumentsToType<std::string>(parsedArguments);
         for (auto &arg : parsedArguments) {
             std::cout << arg << "\n";
         }
+        return 0;
     }
 
-    static void func2(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+    static int func2(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Hello!\n";
+        return 0;
     }
 
-    static void func3(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+    static int func3(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Hello " << parsedFlags.at("name").value << " " << parsedFlags.at("surname").value << "!\n";
+        return 0;
     }
 
-    static void func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+    static int func4(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
         std::cout << "Flags: \n";
-        for (auto &flag: parsedFlags) {
+        for (auto &flag : parsedFlags) {
             std::cout << flag.first << " -> " << flag.second.value << "\n";
         }
         std::cout << "Arguments: \n";
         for (auto &arg : parsedArguments) {
             std::cout << arg << "\n";
         }
+        return 0;
+    }
+
+    static int func5(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+        std::vector<std::string> arguments;
+        try {
+            arguments = cli::Cli::convertArgumentsToType<std::string>(parsedArguments);
+        } catch (const std::invalid_argument &error) {
+            std::cout << error.what() << "\n";
+            return 3;
+        }
+        for (auto &argument : arguments) {
+            std::cout << argument << " ";
+        }
+        return 0;
+    }
+
+    static int func6(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+        std::vector<int> arguments;
+        try {
+            arguments = cli::Cli::convertArgumentsToType<int>(parsedArguments);
+        } catch (const std::invalid_argument &error) {
+            std::cout << error.what() << "\n";
+            return 3;
+        }
+        for (auto &argument : arguments) {
+            std::cout << argument << " ";
+        }
+        return 0;
+    }
+
+    static int func7(cli::FlagsType &parsedFlags, cli::ArgumentsType &parsedArguments) {
+        try {
+            auto arguments = cli::Cli::convertArgumentsToType<bool>(parsedArguments);
+            for (auto argument : arguments) {
+                std::cout << argument << " ";
+            }
+        } catch (const std::invalid_argument &error) {
+            std::cout << error.what() << "\n";
+            return 3;
+        }
+        return 0;
     }
 
     void SetUp() override {
         cli.setDescriptionMaxWidth(7);
 
         cli.command("printArguments", "Displays the passed arguments", "$ printArguments file1.txt file2.txt\n>>> Arguments:\n file1.txt\n file2.txt", func, -1)
-           .command("printTwoArguments", "Displays the passed arguments", func, 2)
-           .command("printHello", "Displays the word \"Hello!\".", func2)
-           .command("printName", "Displays \"Hello [entered name]!\".",
+                .command("printTwoArguments", "Displays the passed arguments", func, 2)
+                .command("printHello", "Displays the word \"Hello!\".", func2)
+                .command("printName", "Displays \"Hello [entered name]!\".",
+                         {cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
+                          cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)},
+                         func3)
+                .command("printFlagsAndArguments", "Displays the passed flags and arguments", "$ printFlagsAndArguments file1.txt --dir value file2.txt\n>>> Flags:\n    flag -> value\n Arguments:\n    file1.txt\n    file2.txt",
                          {
-                            cli::Flag("name", "n", "A flag that accepts a name as input.", true, true),
-                            cli::Flag("surname", "s", "A flag that accepts a surname for entry.", true, true)
-                         }, func3)
-           .command("printFlagsAndArguments", "Displays the passed flags and arguments","$ printFlagsAndArguments file1.txt --dir value file2.txt\n>>> Flags:\n    flag -> value\n Arguments:\n    file1.txt\n    file2.txt",
-            {
-                            cli::Flag("dir", "d", "A flag that accepts a directory as input.", false, true),
-                         }, func4, -1);
+                                 cli::Flag("dir", "d", "A flag that accepts a directory as input.", false, true),
+                         },
+                         func4, -1)
+                .command("printStringArguments", "Displays the passed string arguments", func5, -1)
+                .command("printIntArguments", "Displays the passed int arguments", func6, -1)
+                .command("printBoolArguments", "Displays the passed bool arguments", func7, -1);
     }
 };
 
@@ -394,6 +443,121 @@ TEST_F(CliFixture, TestingReadingArgumentsAndFlags) {
     const std::string cmdArguments = "./cli printFlagsAndArguments file1.txt --dir directory/ file2.txt";
     char **argv = initArgv(argc, cmdArguments);
     const std::string fileName = "5.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingErrorCommandArgumentsMustBeIntType) {
+    //Average
+    int argc = 5;
+    const std::string cmdArguments = "./cli printIntArguments file1.txt file2.txt --nocolor";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "6.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingErrorCommandArgumentsMustBeBoolType) {
+    //Average
+    int argc = 5;
+    const std::string cmdArguments = "./cli printBoolArguments a 4 --nocolor";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "7.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingConvertArgumentsToInt) {
+    //Average
+    int argc = 6;
+    const std::string cmdArguments = "./cli printIntArguments -2 +102 10 --nocolor";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "8.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingConvertArgumentsToBool) {
+    //Average
+    int argc = 7;
+    const std::string cmdArguments = "./cli printBoolArguments true false 1 0 --nocolor";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "9.txt";
+
+    //Act
+    cli.parse(argc, argv);
+    createAndWriteFileCurrentResult(cmdArguments, fileName);
+    std::string currentCode, expectedCode;
+    try {
+        getCurrentCodeAndExpectedCode(fileName, currentCode, expectedCode);
+    } catch (const std::invalid_argument &error) {
+        std::cout << error.what();
+        EXPECT_TRUE(1);
+    }
+
+    //Assert
+    ASSERT_EQ(currentCode, expectedCode);
+    deleteArgv(argc, argv);
+}
+
+TEST_F(CliFixture, TestingConvertArgumentsToString) {
+    //Average
+    int argc = 8;
+    const std::string cmdArguments = "./cli printStringArguments true 1 file1.txt +-100 -4 --nocolor";
+    char **argv = initArgv(argc, cmdArguments);
+    const std::string fileName = "10.txt";
 
     //Act
     cli.parse(argc, argv);
