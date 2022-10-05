@@ -1,6 +1,7 @@
 # Command Line Interface (CLI)
 
 [![Build](https://github.com/Tsygankov-Slava/cli/actions/workflows/build.yml/badge.svg)](https://github.com/Tsygankov-Slava/cli/actions/workflows/build.yml)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
 
 CLI - это библиотека, которая помогает разработчику в написании консольных приложений. С помощью этого проекта, программист сможет легко наладить общение пользователя с программой через консоль. Плюс этого проекта в том, что разработчику не придётся каждый раз прописывать свою логику CLI, стоит лишь добавить эту библиотеку в свой проект и можно смело использовать её в своей программе.
